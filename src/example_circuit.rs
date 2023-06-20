@@ -1,8 +1,8 @@
 use std::marker::PhantomData;
 
 use halo2_proofs::{
+    arithmetic::Field,
     circuit::{SimpleFloorPlanner, Value},
-    halo2curves::FieldExt,
     plonk::{Advice, Circuit, Column, Instance, Selector},
     poly::Rotation,
 };
@@ -15,13 +15,13 @@ pub struct MyConfig {
 }
 
 #[derive(Default)]
-pub struct MyCircuit<F: FieldExt> {
+pub struct MyCircuit<F: Field> {
     a: Value<F>,
     b: Value<F>,
     _marker: PhantomData<F>,
 }
 
-impl<F: FieldExt> Circuit<F> for MyCircuit<F> {
+impl<F: Field> Circuit<F> for MyCircuit<F> {
     type Config = MyConfig;
 
     type FloorPlanner = SimpleFloorPlanner;

@@ -64,7 +64,7 @@ impl<'a, ConcreteCircuit: Circuit<Fr> + Clone + Debug> RealProver<ConcreteCircui
 
     pub fn run(&mut self, instance: Vec<Vec<Fr>>, write_to_file: bool) -> Result<Vec<u8>, Error> {
         self.load()?;
-        let instance_refs: Vec<&[Fr]> = instance.iter().map(|v| &v[..]).collect();
+        let instance_refs_intermediate = instance.iter().map(|v| &v[..]).collect::<Vec<&[Fr]>>();
         let mut transcript = Blake2bWrite::<_, G1Affine, Challenge255<_>>::init(vec![]);
         create_proof::<
             KZGCommitmentScheme<Bn256>,
@@ -77,7 +77,7 @@ impl<'a, ConcreteCircuit: Circuit<Fr> + Clone + Debug> RealProver<ConcreteCircui
             &self.general_params.as_mut().unwrap(),
             &self.circuit_proving_key.as_mut().unwrap(),
             &[self.circuit.clone()],
-            &[&instance_refs],
+            &[&instance_refs_intermediate],
             self.rng.to_owned(),
             &mut transcript,
         )
@@ -278,10 +278,7 @@ impl RealVerifier {
     pub fn run(&self, proof: Vec<u8>, instance: Vec<Vec<Fr>>) -> Result<(), Error> {
         let strategy = SingleStrategy::new(&self.general_params);
 
-        let intermediate = instance.iter().map(|v| &v[..]).collect::<Vec<&[Fr]>>();
-        let intermediate_2 = vec![intermediate.as_slice()];
-        let instance_refs: &[&[&[Fr]]] = intermediate_2.as_slice();
-
+        let instance_refs_intermediate = instance.iter().map(|v| &v[..]).collect::<Vec<&[Fr]>>();
         let mut verifier_transcript = Blake2bRead::<_, G1Affine, Challenge255<_>>::init(&proof[..]);
 
         verify_proof::<
@@ -294,7 +291,7 @@ impl RealVerifier {
             &self.verifier_params,
             &self.circuit_verifying_key,
             strategy,
-            instance_refs,
+            &[&instance_refs_intermediate],
             &mut verifier_transcript,
         )
     }

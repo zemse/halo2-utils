@@ -299,15 +299,25 @@ impl RealVerifier {
 
 #[cfg(test)]
 mod tests {
-    use halo2_proofs::halo2curves::bn256::Fr;
+    use std::marker::PhantomData;
+
+    use halo2_proofs::{circuit::Value, halo2curves::bn256::Fr};
 
     use super::*;
     use crate::example_circuit::MyCircuit;
 
     #[test]
     fn it_works() {
-        let circuit = MyCircuit::<Fr>::default();
-        let mut prover = RealProver::init(&circuit).degree(4);
+        let a = Fr::from(3);
+        let b = Fr::from(7);
+
+        let circuit = MyCircuit {
+            a: Value::known(a),
+            b: Value::known(b),
+            _marker: PhantomData,
+        };
+
+        let mut prover = RealProver::init(circuit);
         prover.run(vec![vec![Fr::from(0)]], true).unwrap();
     }
 }

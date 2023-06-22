@@ -16,9 +16,9 @@ pub struct MyConfig {
 
 #[derive(Clone, Default, Debug)]
 pub struct MyCircuit<F: Field> {
-    a: Value<F>,
-    b: Value<F>,
-    _marker: PhantomData<F>,
+    pub a: Value<F>,
+    pub b: Value<F>,
+    pub _marker: PhantomData<F>,
 }
 
 impl<F: Field> Circuit<F> for MyCircuit<F> {

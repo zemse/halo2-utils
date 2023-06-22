@@ -1,5 +1,8 @@
 mod example_circuit;
 
+mod utils;
+pub use utils::*;
+
 pub mod printer;
 pub use printer::Printer;
 

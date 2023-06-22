@@ -19,11 +19,13 @@ use std::{
     str::FromStr,
 };
 
+use crate::derive_k;
+
 #[derive(Clone)]
 pub struct RealProver<'a, ConcreteCircuit: Circuit<Fr>> {
     name: &'a str,
-    degree: u32,
     circuit: ConcreteCircuit,
+    degree: u32,
     dir_path: PathBuf,
     serde_format: SerdeFormat,
     rng: ChaCha20Rng,
@@ -34,11 +36,11 @@ pub struct RealProver<'a, ConcreteCircuit: Circuit<Fr>> {
 }
 
 impl<'a, ConcreteCircuit: Circuit<Fr>> RealProver<'a, ConcreteCircuit> {
-    pub fn init(name: &'a str, degree: u32, circuit: ConcreteCircuit) -> Self {
+    pub fn init(name: &'a str, circuit: ConcreteCircuit) -> Self {
         Self {
             name,
-            degree,
             circuit,
+            degree: derive_k::<Fr, ConcreteCircuit>(),
             dir_path: PathBuf::from_str("./out").unwrap(),
             serde_format: SerdeFormat::RawBytes,
             rng: ChaChaRng::seed_from_u64(2),
@@ -87,6 +89,11 @@ impl<'a, ConcreteCircuit: Circuit<Fr>> RealProver<'a, ConcreteCircuit> {
             file.write(proof.as_slice())?;
         }
         Ok(proof)
+    }
+
+    pub fn degree(mut self, k: u32) -> Self {
+        self.degree = k;
+        self
     }
 
     fn set_general_params(
@@ -256,7 +263,7 @@ mod tests {
     #[test]
     fn it_works() {
         let circuit = MyCircuit::<Fr>::default();
-        let prover = RealProver::init("MyCircuit", 4, circuit);
+        let prover = RealProver::init("MyCircuit", circuit).degree(4);
         prover.run(vec![vec![Fr::from(0)]], true).unwrap();
     }
 }

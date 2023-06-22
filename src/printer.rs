@@ -3,6 +3,8 @@ use std::marker::PhantomData;
 use halo2_proofs::{arithmetic::Field, dev::CircuitLayout, plonk::Circuit};
 use plotters::prelude::*;
 
+use crate::utils::derive_k;
+
 pub struct Printer<'a, F: Field, ConcreteCircuit: Circuit<F>> {
     // main params
     _k: u32,
@@ -20,10 +22,10 @@ pub struct Printer<'a, F: Field, ConcreteCircuit: Circuit<F>> {
 }
 
 impl<'a, F: Field, ConcreteCircuit: Circuit<F>> Printer<'a, F, ConcreteCircuit> {
-    pub fn from(k: u32, circuit: &'a ConcreteCircuit) -> Self {
+    pub fn from(circuit: &'a ConcreteCircuit) -> Self {
         // let root = BitMapBackend::new("simple-example-layout.png", (1024, 768)).into_drawing_area();
         Self {
-            _k: k,
+            _k: derive_k::<F, ConcreteCircuit>(),
             _circuit: circuit,
             _layout: CircuitLayout::default()
                 .mark_equality_cells(true)
@@ -41,7 +43,12 @@ impl<'a, F: Field, ConcreteCircuit: Circuit<F>> Printer<'a, F, ConcreteCircuit> 
     pub fn print(self) {
         let root = BitMapBackend::new(self._path, self._dimensions).into_drawing_area();
         root.fill(&WHITE).unwrap();
-        let root = root.titled(self._title, ("sans-serif", 60)).unwrap();
+        let root = root
+            .titled(
+                format!("{} (k={})", self._title, self._k).as_str(),
+                ("sans-serif", 60),
+            )
+            .unwrap();
 
         self._layout.render(self._k, self._circuit, &root).unwrap();
     }
@@ -95,6 +102,6 @@ mod tests {
     #[test]
     fn it_works() {
         let circuit = MyCircuit::<Fr>::default();
-        Printer::from(4, &circuit).print();
+        Printer::from(&circuit).print();
     }
 }

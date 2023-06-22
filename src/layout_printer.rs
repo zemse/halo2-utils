@@ -5,7 +5,7 @@ use plotters::prelude::*;
 
 use crate::{derive_circuit_name, utils::derive_k};
 
-pub struct Printer<'a, F: Field, ConcreteCircuit: Circuit<F>> {
+pub struct LayoutPrinter<'a, F: Field, ConcreteCircuit: Circuit<F>> {
     // main params
     _k: u32,
     _circuit: &'a ConcreteCircuit,
@@ -21,7 +21,7 @@ pub struct Printer<'a, F: Field, ConcreteCircuit: Circuit<F>> {
     _marker: PhantomData<F>,
 }
 
-impl<'a, F: Field, ConcreteCircuit: Circuit<F> + Debug> Printer<'a, F, ConcreteCircuit> {
+impl<'a, F: Field, ConcreteCircuit: Circuit<F> + Debug> LayoutPrinter<'a, F, ConcreteCircuit> {
     pub fn from(circuit: &'a ConcreteCircuit) -> Self {
         let circuit_name = derive_circuit_name(circuit);
         Self {
@@ -102,6 +102,6 @@ mod tests {
     #[test]
     fn it_works() {
         let circuit = MyCircuit::<Fr>::default();
-        Printer::from(&circuit).print();
+        LayoutPrinter::from(&circuit).print();
     }
 }

@@ -1,9 +1,9 @@
-use std::marker::PhantomData;
+use std::{fmt::Debug, marker::PhantomData};
 
 use halo2_proofs::{arithmetic::Field, dev::CircuitLayout, plonk::Circuit};
 use plotters::prelude::*;
 
-use crate::utils::derive_k;
+use crate::{derive_circuit_name, utils::derive_k};
 
 pub struct Printer<'a, F: Field, ConcreteCircuit: Circuit<F>> {
     // main params
@@ -13,17 +13,17 @@ pub struct Printer<'a, F: Field, ConcreteCircuit: Circuit<F>> {
     _layout: CircuitLayout,
     // _root: DrawingArea<BitMapBackend<'a>, plotters::coord::Shift>,
     // some configs
-    _path: &'a str,
+    _path: String,
     _color: &'a RGBColor,
     _dimensions: (u32, u32),
-    _title: &'a str,
+    _title: String,
     // markers
     _marker: PhantomData<F>,
 }
 
-impl<'a, F: Field, ConcreteCircuit: Circuit<F>> Printer<'a, F, ConcreteCircuit> {
+impl<'a, F: Field, ConcreteCircuit: Circuit<F> + Debug> Printer<'a, F, ConcreteCircuit> {
     pub fn from(circuit: &'a ConcreteCircuit) -> Self {
-        // let root = BitMapBackend::new("simple-example-layout.png", (1024, 768)).into_drawing_area();
+        let circuit_name = derive_circuit_name(circuit);
         Self {
             _k: derive_k::<F, ConcreteCircuit>(),
             _circuit: circuit,
@@ -32,16 +32,16 @@ impl<'a, F: Field, ConcreteCircuit: Circuit<F>> Printer<'a, F, ConcreteCircuit> 
                 .show_equality_constraints(true)
                 .show_labels(true),
             // _root: root,
-            _path: "circuit-layout.png",
+            _path: format!("{}-layout.png", circuit_name),
             _color: &WHITE,
             _dimensions: (1024, 768),
-            _title: "Circuit Layout",
+            _title: format!("{} Layout", circuit_name),
             _marker: PhantomData::default(),
         }
     }
 
     pub fn print(self) {
-        let root = BitMapBackend::new(self._path, self._dimensions).into_drawing_area();
+        let root = BitMapBackend::new(self._path.as_str(), self._dimensions).into_drawing_area();
         root.fill(&WHITE).unwrap();
         let root = root
             .titled(
@@ -54,7 +54,7 @@ impl<'a, F: Field, ConcreteCircuit: Circuit<F>> Printer<'a, F, ConcreteCircuit> 
     }
 
     pub fn path(mut self, path: &'a str) -> Self {
-        self._path = path;
+        self._path = String::from(path);
         self
     }
 
@@ -69,7 +69,7 @@ impl<'a, F: Field, ConcreteCircuit: Circuit<F>> Printer<'a, F, ConcreteCircuit> 
     }
 
     pub fn title(mut self, title: &'a str) -> Self {
-        self._title = title;
+        self._title = String::from(title);
         self
     }
 

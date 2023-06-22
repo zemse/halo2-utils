@@ -14,7 +14,7 @@ pub struct MyConfig {
     instance: Column<Instance>,
 }
 
-#[derive(Default)]
+#[derive(Clone, Default, Debug)]
 pub struct MyCircuit<F: Field> {
     a: Value<F>,
     b: Value<F>,

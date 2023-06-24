@@ -7,6 +7,8 @@ use halo2_proofs::{
     poly::Rotation,
 };
 
+use crate::CircuitExt;
+
 #[derive(Clone)]
 pub struct MyConfig {
     selector: Selector,
@@ -16,8 +18,8 @@ pub struct MyConfig {
 
 #[derive(Clone, Default, Debug)]
 pub struct MyCircuit<F: Field> {
-    pub a: Value<F>,
-    pub b: Value<F>,
+    pub a: F,
+    pub b: F,
     pub _marker: PhantomData<F>,
 }
 
@@ -62,11 +64,19 @@ impl<F: Field> Circuit<F> for MyCircuit<F> {
             || "region main",
             |mut region| {
                 config.selector.enable(&mut region, 0)?;
-                let a_cell =
-                    region.assign_advice(|| "assign advice a", config.advice, 0, || self.a)?;
+                let a_cell = region.assign_advice(
+                    || "assign advice a",
+                    config.advice,
+                    0,
+                    || Value::known(self.a),
+                )?;
 
-                let b_cell =
-                    region.assign_advice(|| "assign advice", config.advice, 1, || self.b)?;
+                let b_cell = region.assign_advice(
+                    || "assign advice",
+                    config.advice,
+                    1,
+                    || Value::known(self.b),
+                )?;
 
                 let product = a_cell.value().copied() * b_cell.value();
                 region.assign_advice(|| "assign product", config.advice, 2, || product)
@@ -74,5 +84,11 @@ impl<F: Field> Circuit<F> for MyCircuit<F> {
         )?;
 
         layouter.constrain_instance(product_cell.cell(), config.instance, 0)
+    }
+}
+
+impl<F: Field> CircuitExt<F> for MyCircuit<F> {
+    fn instances(&self) -> Vec<Vec<F>> {
+        vec![vec![self.a * self.b]]
     }
 }

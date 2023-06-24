@@ -1,5 +1,5 @@
 use halo2_proofs::{
-    halo2curves::bn256::{Bn256, Fr, G1Affine},
+    halo2curves::bn256::{Bn256, Fq, Fr, G1Affine},
     plonk::{
         create_proof, keygen_pk, keygen_vk, verify_proof, Circuit, Error, ProvingKey, VerifyingKey,
     },
@@ -17,18 +17,27 @@ use halo2_proofs::{
     SerdeFormat,
 };
 use rand_chacha::{rand_core::SeedableRng, ChaCha20Rng, ChaChaRng};
+use snark_verifier::{
+    loader::evm::EvmLoader,
+    pcs::kzg::{Gwc19, KzgAs, KzgDecidingKey},
+    system::halo2::{compile, transcript::evm::EvmTranscript, Config},
+    verifier::{self, SnarkVerifier},
+};
 use std::{
     fmt::Debug,
     fs::{create_dir_all, File},
     io::Write,
     path::{Path, PathBuf},
+    rc::Rc,
     str::FromStr,
 };
 
-use crate::{derive_circuit_name, derive_k};
+use crate::{derive_circuit_name, derive_k, CircuitExt};
+
+type PlonkVerifier = verifier::plonk::PlonkVerifier<KzgAs<Bn256, Gwc19>>;
 
 #[derive(Clone)]
-pub struct RealProver<ConcreteCircuit: Circuit<Fr> + Clone + Debug> {
+pub struct RealProver<ConcreteCircuit: Circuit<Fr> + CircuitExt<Fr> + Clone + Debug> {
     circuit: ConcreteCircuit,
     degree: u32,
     dir_path: PathBuf,
@@ -40,8 +49,10 @@ pub struct RealProver<ConcreteCircuit: Circuit<Fr> + Clone + Debug> {
     pub circuit_verifying_key: Option<VerifyingKey<G1Affine>>,
 }
 
-impl<'a, ConcreteCircuit: Circuit<Fr> + Clone + Debug> RealProver<ConcreteCircuit> {
-    pub fn init(circuit: ConcreteCircuit) -> Self {
+impl<'a, ConcreteCircuit: Circuit<Fr> + CircuitExt<Fr> + Clone + Debug>
+    RealProver<ConcreteCircuit>
+{
+    pub fn from(circuit: ConcreteCircuit) -> Self {
         Self {
             circuit,
             degree: derive_k::<Fr, ConcreteCircuit>(),
@@ -62,9 +73,10 @@ impl<'a, ConcreteCircuit: Circuit<Fr> + Clone + Debug> RealProver<ConcreteCircui
         Ok(self)
     }
 
-    pub fn run(&mut self, instance: Vec<Vec<Fr>>, write_to_file: bool) -> Result<Vec<u8>, Error> {
+    pub fn run(&mut self, write_to_file: bool) -> Result<(Vec<u8>, Vec<Vec<Fr>>), Error> {
         self.load()?;
-        let instance_refs_intermediate = instance.iter().map(|v| &v[..]).collect::<Vec<&[Fr]>>();
+        let instances = self.circuit.instances();
+        let instances_refs_intermediate = instances.iter().map(|v| &v[..]).collect::<Vec<&[Fr]>>();
         let mut transcript = Blake2bWrite::<_, G1Affine, Challenge255<_>>::init(vec![]);
         create_proof::<
             KZGCommitmentScheme<Bn256>,
@@ -77,7 +89,7 @@ impl<'a, ConcreteCircuit: Circuit<Fr> + Clone + Debug> RealProver<ConcreteCircui
             &self.general_params.as_mut().unwrap(),
             &self.circuit_proving_key.as_mut().unwrap(),
             &[self.circuit.clone()],
-            &[&instance_refs_intermediate],
+            &[&instances_refs_intermediate],
             self.rng.to_owned(),
             &mut transcript,
         )
@@ -93,11 +105,14 @@ impl<'a, ConcreteCircuit: Circuit<Fr> + Clone + Debug> RealProver<ConcreteCircui
             let mut file = File::create(proof_path)?;
             file.write(proof.as_slice())?;
         }
-        Ok(proof)
+        Ok((proof, instances))
     }
 
     pub fn verifier(&self) -> RealVerifier {
         RealVerifier {
+            circuit_name: derive_circuit_name(&self.circuit),
+            dir_path: self.dir_path.clone(),
+            num_instance: self.circuit.num_instance(),
             general_params: self.general_params.clone().unwrap(),
             verifier_params: self.verifier_params.clone().unwrap(),
             circuit_verifying_key: self.circuit_verifying_key.clone().unwrap(),
@@ -269,6 +284,9 @@ impl<'a, ConcreteCircuit: Circuit<Fr> + Clone + Debug> RealProver<ConcreteCircui
 }
 
 pub struct RealVerifier {
+    pub circuit_name: String,
+    pub dir_path: PathBuf,
+    pub num_instance: Vec<usize>,
     pub general_params: ParamsKZG<Bn256>,
     pub verifier_params: ParamsKZG<Bn256>,
     pub circuit_verifying_key: VerifyingKey<G1Affine>,
@@ -277,7 +295,6 @@ pub struct RealVerifier {
 impl RealVerifier {
     pub fn run(&self, proof: Vec<u8>, instance: Vec<Vec<Fr>>) -> Result<(), Error> {
         let strategy = SingleStrategy::new(&self.general_params);
-
         let instance_refs_intermediate = instance.iter().map(|v| &v[..]).collect::<Vec<&[Fr]>>();
         let mut verifier_transcript = Blake2bRead::<_, G1Affine, Challenge255<_>>::init(&proof[..]);
 
@@ -295,29 +312,61 @@ impl RealVerifier {
             &mut verifier_transcript,
         )
     }
+
+    pub fn generate_yul(&self, write_to_file: bool) -> Result<String, Error> {
+        let protocol = compile(
+            &self.verifier_params,
+            &self.circuit_verifying_key,
+            Config::kzg().with_num_instance(self.num_instance.clone()),
+        );
+        let vk: KzgDecidingKey<Bn256> = (
+            self.verifier_params.get_g()[0],
+            self.verifier_params.g2(),
+            self.verifier_params.s_g2(),
+        )
+            .into();
+
+        let loader = EvmLoader::new::<Fq, Fr>();
+        let protocol = protocol.loaded(&loader);
+        let mut transcript = EvmTranscript::<_, Rc<EvmLoader>, _, _>::new(&loader);
+
+        let instances = transcript.load_instances(self.num_instance.clone());
+        let proof = PlonkVerifier::read_proof(&vk, &protocol, &instances, &mut transcript).unwrap();
+        PlonkVerifier::verify(&vk, &protocol, &instances, &proof).unwrap();
+
+        let yul = loader.yul_code();
+        if write_to_file {
+            let proof_path = self
+                .dir_path
+                .join(Path::new(&format!("{}_verifier.yul", self.circuit_name)));
+
+            let mut file = File::create(proof_path)?;
+            file.write(yul.as_bytes())?;
+        }
+        Ok(yul)
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use std::marker::PhantomData;
 
-    use halo2_proofs::{circuit::Value, halo2curves::bn256::Fr};
+    use halo2_proofs::halo2curves::bn256::Fr;
 
     use super::*;
     use crate::example_circuit::MyCircuit;
 
     #[test]
     fn it_works() {
-        let a = Fr::from(3);
-        let b = Fr::from(7);
-
-        let circuit = MyCircuit {
-            a: Value::known(a),
-            b: Value::known(b),
+        let mut prover = RealProver::from(MyCircuit {
+            a: Fr::from(3),
+            b: Fr::from(7),
             _marker: PhantomData,
-        };
+        });
+        let (proof, public_inputs) = prover.run(true).unwrap();
 
-        let mut prover = RealProver::init(circuit);
-        prover.run(vec![vec![Fr::from(0)]], true).unwrap();
+        let verifier = prover.verifier();
+        let result = verifier.run(proof, public_inputs);
+        assert!(result.is_ok());
     }
 }

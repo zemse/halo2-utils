@@ -113,7 +113,11 @@ impl<'a, ConcreteCircuit: Circuit<Fr> + CircuitExt<Fr> + Clone + Debug>
             circuit_name: derive_circuit_name(&self.circuit),
             dir_path: self.dir_path.clone(),
             num_instance: self.circuit.num_instance(),
-            general_params: self.general_params.clone().unwrap(),
+            general_params: self
+                .general_params
+                .clone()
+                .ok_or("params not available, please execute prover.load() first")
+                .unwrap(),
             verifier_params: self.verifier_params.clone().unwrap(),
             circuit_verifying_key: self.circuit_verifying_key.clone().unwrap(),
         }
@@ -144,16 +148,13 @@ impl<'a, ConcreteCircuit: Circuit<Fr> + CircuitExt<Fr> + Clone + Debug>
             .join(Path::new(&format!("kzg_general_params_{}", self.degree)));
         match File::open(path.clone()) {
             Ok(mut file) => {
-                println!("reading {}", path.display());
                 self.general_params = Some(ParamsKZG::<Bn256>::read_custom(
                     &mut file,
                     self.serde_format,
                 )?);
             }
             Err(_) => {
-                println!("setting up general params");
                 let general_params = ParamsKZG::<Bn256>::setup(self.degree, self.rng.clone());
-                println!("writing {}", path.display());
                 let mut file = File::create(path)?;
                 general_params.write_custom(&mut file, self.serde_format)?;
                 self.general_params = Some(general_params);
@@ -182,17 +183,14 @@ impl<'a, ConcreteCircuit: Circuit<Fr> + CircuitExt<Fr> + Clone + Debug>
             .join(Path::new(&format!("kzg_verifier_params_{}", self.degree)));
         match File::open(path.clone()) {
             Ok(mut file) => {
-                println!("reading {}", path.display());
                 self.verifier_params = Some(ParamsKZG::<Bn256>::read_custom(
                     &mut file,
                     self.serde_format,
                 )?);
             }
             Err(_) => {
-                println!("setting up verifier params");
                 let general_params = self.general_params.clone().unwrap();
                 let verifier_params = general_params.verifier_params().to_owned();
-                println!("writing {}", path.display());
                 let mut file = File::create(path)?;
                 verifier_params.write_custom(&mut file, self.serde_format)?;
                 self.verifier_params = Some(verifier_params);
@@ -223,7 +221,6 @@ impl<'a, ConcreteCircuit: Circuit<Fr> + CircuitExt<Fr> + Clone + Debug>
         )));
         match File::open(verifying_key_path.clone()) {
             Ok(mut file) => {
-                println!("reading {}", verifying_key_path.display());
                 self.circuit_verifying_key = Some(
                     VerifyingKey::<G1Affine>::read::<File, ConcreteCircuit>(
                         &mut file,
@@ -233,10 +230,8 @@ impl<'a, ConcreteCircuit: Circuit<Fr> + CircuitExt<Fr> + Clone + Debug>
                 );
             }
             Err(_) => {
-                println!("setting up verifying key");
                 let vk = keygen_vk(self.general_params.as_mut().unwrap(), &self.circuit)
                     .expect("keygen_vk should not fail");
-                println!("writing {}", verifying_key_path.display());
                 let mut file = File::create(verifying_key_path)?;
                 vk.write(&mut file, self.serde_format)?;
                 self.circuit_verifying_key = Some(vk);
@@ -252,7 +247,6 @@ impl<'a, ConcreteCircuit: Circuit<Fr> + CircuitExt<Fr> + Clone + Debug>
         )));
         match File::open(proving_key_path.clone()) {
             Ok(mut file) => {
-                println!("reading {}", proving_key_path.display());
                 self.circuit_proving_key = Some(
                     ProvingKey::<G1Affine>::read::<File, ConcreteCircuit>(
                         &mut file,
@@ -262,14 +256,12 @@ impl<'a, ConcreteCircuit: Circuit<Fr> + CircuitExt<Fr> + Clone + Debug>
                 );
             }
             Err(_) => {
-                println!("setting up proving key");
                 let pk = keygen_pk(
                     self.general_params.as_mut().unwrap(),
                     self.circuit_verifying_key.clone().unwrap(),
                     &self.circuit,
                 )
                 .expect("keygen_pk should not fail");
-                println!("writing {}", proving_key_path.display());
                 let mut file = File::create(proving_key_path)?;
                 pk.write(&mut file, self.serde_format)?;
                 self.circuit_proving_key = Some(pk);

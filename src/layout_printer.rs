@@ -53,6 +53,11 @@ impl<'a, F: Field, ConcreteCircuit: Circuit<F> + Debug> LayoutPrinter<'a, F, Con
         self._layout.render(self._k, self._circuit, &root).unwrap();
     }
 
+    pub fn degree(mut self, k: u32) -> Self {
+        self._k = k;
+        self
+    }
+
     pub fn path(mut self, path: &'a str) -> Self {
         self._path = String::from(path);
         self

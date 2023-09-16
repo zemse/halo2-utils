@@ -36,7 +36,7 @@ impl<'a, F: Field, ConcreteCircuit: Circuit<F> + Debug> LayoutPrinter<'a, F, Con
             _color: &WHITE,
             _dimensions: (1024, 768),
             _title: format!("{} Layout", circuit_name),
-            _marker: PhantomData::default(),
+            _marker: PhantomData,
         }
     }
 

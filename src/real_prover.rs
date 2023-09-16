@@ -49,9 +49,7 @@ pub struct RealProver<ConcreteCircuit: Circuit<Fr> + CircuitExt<Fr> + Clone + De
     pub circuit_verifying_key: Option<VerifyingKey<G1Affine>>,
 }
 
-impl<'a, ConcreteCircuit: Circuit<Fr> + CircuitExt<Fr> + Clone + Debug>
-    RealProver<ConcreteCircuit>
-{
+impl<ConcreteCircuit: Circuit<Fr> + CircuitExt<Fr> + Clone + Debug> RealProver<ConcreteCircuit> {
     pub fn from(circuit: ConcreteCircuit) -> Self {
         Self {
             circuit,
@@ -86,8 +84,8 @@ impl<'a, ConcreteCircuit: Circuit<Fr> + CircuitExt<Fr> + Clone + Debug>
             Blake2bWrite<Vec<u8>, G1Affine, Challenge255<G1Affine>>,
             _,
         >(
-            &self.general_params.as_mut().unwrap(),
-            &self.circuit_proving_key.as_mut().unwrap(),
+            self.general_params.as_mut().unwrap(),
+            self.circuit_proving_key.as_mut().unwrap(),
             &[self.circuit.clone()],
             &[&instances_refs_intermediate],
             self.rng.to_owned(),
@@ -103,7 +101,7 @@ impl<'a, ConcreteCircuit: Circuit<Fr> + CircuitExt<Fr> + Clone + Debug>
             )));
 
             let mut file = File::create(proof_path)?;
-            file.write(proof.as_slice())?;
+            file.write_all(proof.as_slice())?;
         }
         Ok((proof, instances))
     }
@@ -333,7 +331,7 @@ impl RealVerifier {
                 .join(Path::new(&format!("{}_verifier.yul", self.circuit_name)));
 
             let mut file = File::create(proof_path)?;
-            file.write(yul.as_bytes())?;
+            file.write_all(yul.as_bytes())?;
         }
         Ok(yul)
     }

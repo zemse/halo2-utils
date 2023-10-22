@@ -47,5 +47,7 @@ pub use ethers;
 pub use halo2_proofs;
 pub use plotters;
 pub use rand_chacha;
+#[cfg(feature = "evm-verifier")]
 pub use snark_verifier;
+#[cfg(feature = "evm-verifier")]
 pub use snark_verifier_sdk;

@@ -6,10 +6,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-halo2_proofs = { git = "https://github.com/privacy-scaling-explorations/halo2.git", tag = "v2023_04_20", features = ["dev-graph"] } 
-# halo2_proofs = { path = "../../opensource/external/pse-halo2/halo2_proofs", features = ["dev-graph"] } 
-snark-verifier-sdk = { git = "https://github.com/privacy-scaling-explorations/snark-verifier.git", rev = "a440ff91" } 
-snark-verifier = { git = "https://github.com/privacy-scaling-explorations/snark-verifier.git", rev = "a440ff91" } 
+halo2_proofs = { git = "https://github.com/privacy-scaling-explorations/halo2.git", rev = "0c3e3b56", features = ["dev-graph"] } 
+snark-verifier-sdk = { git = "https://github.com/privacy-scaling-explorations/snark-verifier.git", rev = "37b99a31", optional = true } 
+snark-verifier = { git = "https://github.com/privacy-scaling-explorations/snark-verifier.git", rev = "37b99a31", optional = true } 
 plotters = "0.3.4"
 rand_chacha = "0.3"
 tabled = "0.14.0"
@@ -17,3 +16,7 @@ ethers = "2.0.7"
 
 [patch."https://github.com/privacy-scaling-explorations/halo2.git"]
 halo2_proofs = { path = "../../external/pse-halo2/halo2_proofs", features = ["dev-graph"] } 
+
+[features]
+default = []
+evm-verifier = ["snark-verifier", "snark-verifier-sdk"]

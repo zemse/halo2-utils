@@ -1,5 +1,6 @@
+use crate::{derive_circuit_name, derive_k, CircuitExt};
 use halo2_proofs::{
-    halo2curves::bn256::{Bn256, Fq, Fr, G1Affine},
+    halo2curves::bn256::{Bn256, Fr, G1Affine},
     plonk::{
         create_proof, keygen_pk, keygen_vk, verify_proof, Circuit, Error, ProvingKey, VerifyingKey,
     },
@@ -17,23 +18,27 @@ use halo2_proofs::{
     SerdeFormat,
 };
 use rand_chacha::{rand_core::SeedableRng, ChaCha20Rng, ChaChaRng};
+use std::{
+    fmt::Debug,
+    fs::{create_dir_all, File},
+    io::Write,
+    path::{Path, PathBuf},
+    str::FromStr,
+};
+
+#[cfg(feature = "evm-verifier")]
+use halo2_proofs::halo2curves::bn256::Fq;
+#[cfg(feature = "evm-verifier")]
 use snark_verifier::{
     loader::evm::EvmLoader,
     pcs::kzg::{Gwc19, KzgAs, KzgDecidingKey},
     system::halo2::{compile, transcript::evm::EvmTranscript, Config},
     verifier::{self, SnarkVerifier},
 };
-use std::{
-    fmt::Debug,
-    fs::{create_dir_all, File},
-    io::Write,
-    path::{Path, PathBuf},
-    rc::Rc,
-    str::FromStr,
-};
+#[cfg(feature = "evm-verifier")]
+use std::rc::Rc;
 
-use crate::{derive_circuit_name, derive_k, CircuitExt};
-
+#[cfg(feature = "evm-verifier")]
 type PlonkVerifier = verifier::plonk::PlonkVerifier<KzgAs<Bn256, Gwc19>>;
 
 #[derive(Clone)]
@@ -303,6 +308,7 @@ impl RealVerifier {
         )
     }
 
+    #[cfg(feature = "evm-verifier")]
     pub fn generate_yul(&self, write_to_file: bool) -> Result<String, Error> {
         let protocol = compile(
             &self.verifier_params,

@@ -1,10 +1,3 @@
-// export dependencies
-pub use halo2_proofs;
-pub use plotters;
-pub use rand_chacha;
-pub use snark_verifier;
-pub use snark_verifier_sdk;
-
 mod example_circuit;
 
 mod utils;
@@ -38,5 +31,12 @@ pub trait FieldExt: halo2_proofs::arithmetic::Field + From<u64> {}
 impl FieldExt for Fr {}
 impl FieldExt for Fp {}
 
-mod zkevm;
+pub mod zkevm;
 pub use zkevm::{Expr, Scalar};
+
+// export dependencies
+pub use halo2_proofs;
+pub use plotters;
+pub use rand_chacha;
+pub use snark_verifier;
+pub use snark_verifier_sdk;

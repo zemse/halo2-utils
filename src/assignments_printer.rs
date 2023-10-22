@@ -64,6 +64,7 @@ where
                 continue 'col;
             }
         }
+        panic!("assignments_printer: column '{}' not found", col_name);
     }
 
     // table.push_record(

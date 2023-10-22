@@ -1,3 +1,10 @@
+// export dependencies
+pub use halo2_proofs;
+pub use plotters;
+pub use rand_chacha;
+pub use snark_verifier;
+pub use snark_verifier_sdk;
+
 mod example_circuit;
 
 mod utils;

@@ -324,16 +324,16 @@ impl RealVerifier {
         let proof = PlonkVerifier::read_proof(&vk, &protocol, &instances, &mut transcript).unwrap();
         PlonkVerifier::verify(&vk, &protocol, &instances, &proof).unwrap();
 
-        let yul = loader.yul_code();
+        let source = loader.solidity_code();
         if write_to_file {
             let proof_path = self
                 .dir_path
                 .join(Path::new(&format!("{}_verifier.yul", self.circuit_name)));
 
             let mut file = File::create(proof_path)?;
-            file.write_all(yul.as_bytes())?;
+            file.write_all(source.as_bytes())?;
         }
-        Ok(yul)
+        Ok(source)
     }
 }
 

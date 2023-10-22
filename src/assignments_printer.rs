@@ -1,8 +1,8 @@
 use std::{iter, ops::IndexMut};
 
-use ethers::types::U256;
+use ethers::types::{BigEndianHash, H256, U256};
 use halo2_proofs::{
-    dev::{CellValue, MockProver},
+    dev::{CellValue, InstanceValue, MockProver},
     halo2curves::ff,
 };
 
@@ -85,7 +85,7 @@ where
             |c| match c {
                 Column::Advice(i) => format_cell_value(advice[*i][row_id]),
                 Column::Fixed(i) => format_cell_value(fixed[*i][row_id]),
-                Column::Instance(i) => format_value(instance[*i][row_id]),
+                Column::Instance(i) => format_instance_value(instance[*i][row_id]),
                 Column::Selector(i) => {
                     if selectors[*i][row_id] {
                         "1".to_string()
@@ -115,9 +115,19 @@ fn format_cell_value<F: FieldExt + ff::PrimeField>(value: CellValue<F>) -> Strin
         CellValue::Poison(v) => format!("Poisoned({})", v),
     }
 }
+fn format_instance_value<F: FieldExt + ff::PrimeField>(value: InstanceValue<F>) -> String {
+    match value {
+        InstanceValue::Assigned(f) => format_value(f),
+        InstanceValue::Padding => "Padding".to_string(),
+    }
+}
 fn format_value<F: FieldExt + ff::PrimeField>(f: F) -> String {
     let v = f.to_repr();
     let v = v.as_ref();
     let v = U256::from_little_endian(v);
-    format!("{:?}", v)
+    if v > U256::from(u64::MAX) {
+        format!("hex{:?}", H256::from_uint(&v))
+    } else {
+        format!("{:x}", v)
+    }
 }

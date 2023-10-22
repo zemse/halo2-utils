@@ -90,4 +90,8 @@ impl<F: FieldExt> CircuitExt<F> for MyCircuit<F> {
     fn instances(&self) -> Vec<Vec<F>> {
         vec![vec![self.a * self.b]]
     }
+
+    fn annotations(&self) -> (Vec<&str>, Vec<&str>, Vec<&str>, Vec<&str>) {
+        (vec!["advice"], vec![], vec!["instance"], vec!["selector"])
+    }
 }

@@ -3,6 +3,8 @@ mod example_circuit;
 mod utils;
 pub use utils::*;
 
+pub mod assignments_printer;
+
 pub mod layout_printer;
 pub use layout_printer::LayoutPrinter;
 
@@ -10,10 +12,13 @@ pub mod real_prover;
 pub use real_prover::RealProver;
 
 use halo2_proofs::{
-    halo2curves::{bn256::Fr, pasta::Fp},
+    halo2curves::{bn256::Fr, ff::FromUniformBytes, pasta::Fp},
     plonk::Circuit,
 };
 pub trait CircuitExt<F: FieldExt>: Circuit<F> {
+    /// Annotations for advice, fixed, instance and selector columns.
+    fn annotations(&self) -> (Vec<&str>, Vec<&str>, Vec<&str>, Vec<&str>);
+
     /// Return the instances of the circuit.
     /// This may depend on extra circuit parameters but NOT on private witnesses.
     fn instances(&self) -> Vec<Vec<F>>;
@@ -26,7 +31,10 @@ pub trait CircuitExt<F: FieldExt>: Circuit<F> {
     }
 }
 
-pub trait FieldExt: halo2_proofs::arithmetic::Field + From<u64> {}
+pub trait FieldExt:
+    halo2_proofs::arithmetic::Field + From<u64> + FromUniformBytes<64> + Ord
+{
+}
 
 impl FieldExt for Fr {}
 impl FieldExt for Fp {}

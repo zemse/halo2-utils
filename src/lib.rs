@@ -16,8 +16,11 @@ pub use layout_printer::LayoutPrinter;
 pub mod real_prover;
 pub use real_prover::RealProver;
 
-use halo2_proofs::{arithmetic::Field, plonk::Circuit};
-pub trait CircuitExt<F: Field>: Circuit<F> {
+use halo2_proofs::{
+    halo2curves::{bn256::Fr, pasta::Fp},
+    plonk::Circuit,
+};
+pub trait CircuitExt<F: FieldExt>: Circuit<F> {
     /// Return the instances of the circuit.
     /// This may depend on extra circuit parameters but NOT on private witnesses.
     fn instances(&self) -> Vec<Vec<F>>;
@@ -29,3 +32,11 @@ pub trait CircuitExt<F: Field>: Circuit<F> {
             .collect::<Vec<usize>>()
     }
 }
+
+pub trait FieldExt: halo2_proofs::arithmetic::Field + From<u64> {}
+
+impl FieldExt for Fr {}
+impl FieldExt for Fp {}
+
+mod zkevm;
+pub use zkevm::{Expr, Scalar};

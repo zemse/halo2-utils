@@ -1,13 +1,12 @@
 use std::marker::PhantomData;
 
 use halo2_proofs::{
-    arithmetic::Field,
     circuit::{SimpleFloorPlanner, Value},
     plonk::{Advice, Circuit, Column, Instance, Selector},
     poly::Rotation,
 };
 
-use crate::CircuitExt;
+use crate::{CircuitExt, FieldExt};
 
 #[derive(Clone)]
 pub struct MyConfig {
@@ -17,13 +16,13 @@ pub struct MyConfig {
 }
 
 #[derive(Clone, Default, Debug)]
-pub struct MyCircuit<F: Field> {
+pub struct MyCircuit<F: FieldExt> {
     pub a: F,
     pub b: F,
     pub _marker: PhantomData<F>,
 }
 
-impl<F: Field> Circuit<F> for MyCircuit<F> {
+impl<F: FieldExt> Circuit<F> for MyCircuit<F> {
     type Config = MyConfig;
 
     type FloorPlanner = SimpleFloorPlanner;
@@ -87,7 +86,7 @@ impl<F: Field> Circuit<F> for MyCircuit<F> {
     }
 }
 
-impl<F: Field> CircuitExt<F> for MyCircuit<F> {
+impl<F: FieldExt> CircuitExt<F> for MyCircuit<F> {
     fn instances(&self) -> Vec<Vec<F>> {
         vec![vec![self.a * self.b]]
     }

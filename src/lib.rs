@@ -43,6 +43,7 @@ pub mod zkevm;
 pub use zkevm::{Expr, Scalar};
 
 // export dependencies
+pub use ethers;
 pub use halo2_proofs;
 pub use plotters;
 pub use rand_chacha;

@@ -100,7 +100,7 @@ impl<ConcreteCircuit: Circuit<Fr> + CircuitExt<Fr> + Clone + Debug> RealProver<C
         )
         .unwrap();
         let elapsed = now.elapsed();
-        println!("Proof generation took {:?} ms", elapsed);
+        println!("Proof generation took {:?}", elapsed);
 
         let proof = transcript.finalize();
         if write_to_file {

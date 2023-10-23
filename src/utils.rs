@@ -16,7 +16,7 @@ where
     rows.ilog2() + 1
 }
 
-pub fn derive_circuit_name<ConcreteCircuit>(circuit: ConcreteCircuit) -> String
+pub fn derive_circuit_name<ConcreteCircuit>(circuit: &ConcreteCircuit) -> String
 where
     ConcreteCircuit: Debug,
 {

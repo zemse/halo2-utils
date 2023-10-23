@@ -1,9 +1,8 @@
-use crate::{derive_circuit_name, CircuitExt};
+#[allow(unused_imports)]
+use crate::{derive_circuit_name, error::Error, CircuitExt, FieldExt};
 use halo2_proofs::{
     halo2curves::bn256::{Bn256, Fr, G1Affine},
-    plonk::{
-        create_proof, keygen_pk, keygen_vk, verify_proof, Circuit, Error, ProvingKey, VerifyingKey,
-    },
+    plonk::{create_proof, keygen_pk, keygen_vk, verify_proof, Circuit, ProvingKey, VerifyingKey},
     poly::{
         commitment::ParamsProver,
         kzg::{
@@ -18,10 +17,11 @@ use halo2_proofs::{
     SerdeFormat,
 };
 use rand_chacha::{rand_core::SeedableRng, ChaCha20Rng, ChaChaRng};
+use serde::{Deserialize, Serialize};
 use std::{
     fmt::Debug,
     fs::{create_dir_all, File},
-    io::Write,
+    io::{Read, Write},
     path::{Path, PathBuf},
     str::FromStr,
     time::Instant,
@@ -31,7 +31,7 @@ use std::{
 use halo2_proofs::halo2curves::bn256::Fq;
 #[cfg(feature = "evm-verifier")]
 use snark_verifier::{
-    loader::evm::EvmLoader,
+    loader::evm::{encode_calldata, EvmLoader},
     pcs::kzg::{Gwc19, KzgAs, KzgDecidingKey},
     system::halo2::{compile, transcript::evm::EvmTranscript, Config},
     verifier::{self, SnarkVerifier},
@@ -77,7 +77,7 @@ impl<ConcreteCircuit: Circuit<Fr> + CircuitExt<Fr> + Clone + Debug> RealProver<C
         Ok(self)
     }
 
-    pub fn run(&mut self, write_to_file: bool) -> Result<(Vec<u8>, Vec<Vec<Fr>>), Error> {
+    pub fn run(&mut self) -> Result<Proof, Error> {
         self.load()?;
         let instances = self.circuit.instances();
         let instances_refs_intermediate = instances.iter().map(|v| &v[..]).collect::<Vec<&[Fr]>>();
@@ -103,16 +103,12 @@ impl<ConcreteCircuit: Circuit<Fr> + CircuitExt<Fr> + Clone + Debug> RealProver<C
         println!("Proof generation took {:?}", elapsed);
 
         let proof = transcript.finalize();
-        if write_to_file {
-            let proof_path = self.dir_path.join(Path::new(&format!(
-                "{}_proof",
-                derive_circuit_name(&self.circuit)
-            )));
-
-            let mut file = File::create(proof_path)?;
-            file.write_all(proof.as_slice())?;
-        }
-        Ok((proof, instances))
+        Ok(Proof::from(
+            self.degree,
+            proof,
+            instances,
+            derive_circuit_name::<ConcreteCircuit>(&self.circuit),
+        ))
     }
 
     pub fn verifier(&self) -> RealVerifier {
@@ -282,6 +278,78 @@ impl<ConcreteCircuit: Circuit<Fr> + CircuitExt<Fr> + Clone + Debug> RealProver<C
     }
 }
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Proof {
+    degree: u32,
+    data: Vec<u8>,
+    instances: Vec<Vec<Fr>>,
+    circuit_name: String,
+}
+
+impl Proof {
+    pub fn from(
+        degree: u32,
+        proof: Vec<u8>,
+        instances: Vec<Vec<Fr>>,
+        circuit_name: String,
+    ) -> Self {
+        Self {
+            degree,
+            data: proof,
+            instances,
+            circuit_name,
+        }
+    }
+
+    pub fn read_from_file(path: &PathBuf) -> Result<Self, Error> {
+        let mut file = File::open(path)?;
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)?;
+        Ok(serde_json::from_str(&contents)?)
+    }
+
+    pub fn degree(&self) -> u32 {
+        self.degree
+    }
+
+    pub fn data(&self) -> &Vec<u8> {
+        &self.data
+    }
+
+    pub fn instances(&self) -> &Vec<Vec<Fr>> {
+        &self.instances
+    }
+
+    pub fn circuit_name(&self) -> &String {
+        &self.circuit_name
+    }
+
+    pub fn num_instances(&self) -> Vec<usize> {
+        self.instances.iter().map(|column| column.len()).collect()
+    }
+
+    pub fn unpack(&self) -> (u32, Vec<u8>, Vec<Vec<Fr>>, String) {
+        (
+            self.degree,
+            self.data.clone(),
+            self.instances.clone(),
+            self.circuit_name.clone(),
+        )
+    }
+
+    pub fn write_to_file(&self, path: &PathBuf) -> Result<(), Error> {
+        let mut file = File::create(path)?;
+        file.write_all(serde_json::to_string(self)?.as_bytes())
+            .unwrap();
+        Ok(())
+    }
+
+    #[cfg(feature = "evm-verifier")]
+    pub fn encode_calldata(&self) -> Vec<u8> {
+        encode_calldata(self.instances(), self.data())
+    }
+}
+
 pub struct RealVerifier {
     pub circuit_name: String,
     pub dir_path: PathBuf,
@@ -292,10 +360,15 @@ pub struct RealVerifier {
 }
 
 impl RealVerifier {
-    pub fn run(&self, proof: Vec<u8>, instance: Vec<Vec<Fr>>) -> Result<(), Error> {
+    pub fn run(&self, proof: Proof) -> Result<(), Error> {
         let strategy = SingleStrategy::new(&self.general_params);
-        let instance_refs_intermediate = instance.iter().map(|v| &v[..]).collect::<Vec<&[Fr]>>();
-        let mut verifier_transcript = Blake2bRead::<_, G1Affine, Challenge255<_>>::init(&proof[..]);
+        let instance_refs_intermediate = proof
+            .instances()
+            .iter()
+            .map(|v| &v[..])
+            .collect::<Vec<&[Fr]>>();
+        let mut verifier_transcript =
+            Blake2bRead::<_, G1Affine, Challenge255<_>>::init(&proof.data()[..]);
 
         verify_proof::<
             KZGCommitmentScheme<Bn256>,
@@ -309,11 +382,12 @@ impl RealVerifier {
             strategy,
             &[&instance_refs_intermediate],
             &mut verifier_transcript,
-        )
+        )?;
+        Ok(())
     }
 
     #[cfg(feature = "evm-verifier")]
-    pub fn generate_yul(&self, write_to_file: bool) -> Result<String, Error> {
+    pub fn generate_yul(&self, path: Option<&PathBuf>) -> Result<String, Error> {
         let protocol = compile(
             &self.verifier_params,
             &self.circuit_verifying_key,
@@ -335,12 +409,8 @@ impl RealVerifier {
         PlonkVerifier::verify(&vk, &protocol, &instances, &proof).unwrap();
 
         let source = loader.solidity_code();
-        if write_to_file {
-            let proof_path = self
-                .dir_path
-                .join(Path::new(&format!("{}_verifier.yul", self.circuit_name)));
-
-            let mut file = File::create(proof_path)?;
+        if let Some(path) = path {
+            let mut file = File::create(path)?;
             file.write_all(source.as_bytes())?;
         }
         Ok(source)
@@ -366,10 +436,10 @@ mod tests {
                 _marker: PhantomData,
             },
         );
-        let (proof, public_inputs) = prover.run(true).unwrap();
+        let proof = prover.run().unwrap();
 
         let verifier = prover.verifier();
-        let result = verifier.run(proof, public_inputs);
+        let result = verifier.run(proof);
         assert!(result.is_ok());
     }
 }

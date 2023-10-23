@@ -1,6 +1,9 @@
-mod example_circuit;
+pub mod example_circuit;
+
+pub mod error;
 
 mod utils;
+
 pub use utils::*;
 
 pub mod assignments_printer;

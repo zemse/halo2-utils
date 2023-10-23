@@ -1,4 +1,4 @@
-use crate::{derive_circuit_name, derive_k, CircuitExt};
+use crate::{derive_circuit_name, CircuitExt};
 use halo2_proofs::{
     halo2curves::bn256::{Bn256, Fr, G1Affine},
     plonk::{
@@ -24,6 +24,7 @@ use std::{
     io::Write,
     path::{Path, PathBuf},
     str::FromStr,
+    time::Instant,
 };
 
 #[cfg(feature = "evm-verifier")]
@@ -55,10 +56,10 @@ pub struct RealProver<ConcreteCircuit: Circuit<Fr> + CircuitExt<Fr> + Clone + De
 }
 
 impl<ConcreteCircuit: Circuit<Fr> + CircuitExt<Fr> + Clone + Debug> RealProver<ConcreteCircuit> {
-    pub fn from(circuit: ConcreteCircuit) -> Self {
+    pub fn from(degree: u32, circuit: ConcreteCircuit) -> Self {
         Self {
             circuit,
-            degree: derive_k::<Fr, ConcreteCircuit>(),
+            degree, //: derive_k::<Fr, ConcreteCircuit>(),
             dir_path: PathBuf::from_str("./out").unwrap(),
             serde_format: SerdeFormat::RawBytes,
             rng: ChaChaRng::seed_from_u64(2),
@@ -81,6 +82,7 @@ impl<ConcreteCircuit: Circuit<Fr> + CircuitExt<Fr> + Clone + Debug> RealProver<C
         let instances = self.circuit.instances();
         let instances_refs_intermediate = instances.iter().map(|v| &v[..]).collect::<Vec<&[Fr]>>();
         let mut transcript = Blake2bWrite::<_, G1Affine, Challenge255<_>>::init(vec![]);
+        let now = Instant::now();
         create_proof::<
             KZGCommitmentScheme<Bn256>,
             ProverSHPLONK<'_, Bn256>,
@@ -97,6 +99,8 @@ impl<ConcreteCircuit: Circuit<Fr> + CircuitExt<Fr> + Clone + Debug> RealProver<C
             &mut transcript,
         )
         .unwrap();
+        let elapsed = now.elapsed();
+        println!("Proof generation took {:?} ms", elapsed);
 
         let proof = transcript.finalize();
         if write_to_file {
@@ -354,11 +358,14 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let mut prover = RealProver::from(MyCircuit {
-            a: Fr::from(3),
-            b: Fr::from(7),
-            _marker: PhantomData,
-        });
+        let mut prover = RealProver::from(
+            4,
+            MyCircuit {
+                a: Fr::from(3),
+                b: Fr::from(7),
+                _marker: PhantomData,
+            },
+        );
         let (proof, public_inputs) = prover.run(true).unwrap();
 
         let verifier = prover.verifier();

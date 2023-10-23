@@ -4,6 +4,7 @@ mod utils;
 pub use utils::*;
 
 pub mod assignments_printer;
+pub mod info_printer;
 
 pub mod layout_printer;
 pub use layout_printer::LayoutPrinter;

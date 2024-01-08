@@ -13,8 +13,8 @@ use tabled::{
     settings::{object::Rows, Alignment, Modify, Style},
 };
 
-#[derive(Debug)]
-enum Column {
+#[derive(Debug, PartialEq)]
+pub enum Column {
     Advice(usize),
     Fixed(usize),
     Instance(usize),
@@ -108,6 +108,129 @@ where
     Ok(())
 }
 
+pub fn print_all<F: FieldExt + ff::PrimeField, C: CircuitExt<F>>(
+    k: u32,
+    circuit: &C,
+    skip: Option<Vec<Column>>,
+) -> Result<(), halo2_proofs::plonk::Error>
+where
+    F::Repr: Sized + IndexMut<usize>,
+{
+    let prover: MockProver<F> = MockProver::run(k, circuit, circuit.instances())?;
+
+    let range = prover.usable_rows();
+
+    let advice = prover.advice();
+    let fixed = prover.fixed();
+    let instance = prover.instance();
+    let selectors = prover.selectors();
+
+    let (advice_annotations, fixed_annotations, instance_annotations, selectors_annotations) =
+        circuit.annotations();
+
+    let mut header = vec![];
+    for (i, _) in advice.iter().enumerate() {
+        let should_skip = skip.as_ref().map(|skip| skip.contains(&Column::Advice(i)));
+        if should_skip.unwrap_or(false) {
+            continue;
+        }
+
+        if advice_annotations.len() > i {
+            header.push(advice_annotations[i]);
+        } else {
+            header.push("unknown advice");
+        }
+    }
+    for (i, _) in fixed.iter().enumerate() {
+        let should_skip = skip.as_ref().map(|skip| skip.contains(&Column::Fixed(i)));
+        if should_skip.unwrap_or(false) {
+            continue;
+        }
+        if fixed_annotations.len() > i {
+            header.push(fixed_annotations[i]);
+        } else {
+            header.push("unknown fixed");
+        }
+    }
+    for (i, _) in instance.iter().enumerate() {
+        let should_skip = skip
+            .as_ref()
+            .map(|skip| skip.contains(&Column::Instance(i)));
+        if should_skip.unwrap_or(false) {
+            continue;
+        }
+        if instance_annotations.len() > i {
+            header.push(instance_annotations[i]);
+        } else {
+            header.push("unknown instance");
+        }
+    }
+    for (i, _) in selectors.iter().enumerate() {
+        let should_skip = skip
+            .as_ref()
+            .map(|skip| skip.contains(&Column::Selector(i)));
+        if should_skip.unwrap_or(false) {
+            continue;
+        }
+        if selectors_annotations.len() > i {
+            header.push(selectors_annotations[i]);
+        } else {
+            header.push("unknown selector");
+        }
+    }
+
+    let mut table = Builder::default();
+    table.set_header(header);
+
+    for row_id in range.start..=range.end {
+        let mut row_data = vec![];
+        for (i, col) in advice.iter().enumerate() {
+            let should_skip = skip.as_ref().map(|skip| skip.contains(&Column::Advice(i)));
+            if should_skip.unwrap_or(false) {
+                continue;
+            }
+            row_data.push(format_cell_value(col[row_id]));
+        }
+        for (i, col) in fixed.iter().enumerate() {
+            let should_skip = skip.as_ref().map(|skip| skip.contains(&Column::Fixed(i)));
+            if should_skip.unwrap_or(false) {
+                continue;
+            }
+            row_data.push(format_cell_value(col[row_id]));
+        }
+        for (i, col) in instance.iter().enumerate() {
+            let should_skip = skip
+                .as_ref()
+                .map(|skip| skip.contains(&Column::Instance(i)));
+            if should_skip.unwrap_or(false) {
+                continue;
+            }
+            row_data.push(format_value(col[row_id]));
+        }
+        for (i, col) in selectors.iter().enumerate() {
+            let should_skip = skip
+                .as_ref()
+                .map(|skip| skip.contains(&Column::Selector(i)));
+            if should_skip.unwrap_or(false) {
+                continue;
+            }
+            row_data.push(if col[row_id] { "1" } else { "0" }.to_string());
+        }
+
+        table.push_record(row_data);
+    }
+
+    let str = table
+        .build()
+        .with(Style::rounded())
+        .with(Modify::new(Rows::new(1..)).with(Alignment::left()))
+        .to_string();
+
+    println!("{}", str);
+
+    Ok(())
+}
+
 fn format_cell_value<F: FieldExt + ff::PrimeField>(value: CellValue<F>) -> String {
     match value {
         CellValue::Unassigned => "Unassigned".to_string(),
@@ -128,7 +251,7 @@ fn format_value<F: FieldExt + ff::PrimeField>(f: F) -> String {
     let v = v.as_ref();
     let v = U256::from_little_endian(v);
     if v > U256::from(u64::MAX) {
-        format!("{}", H256::from_uint(&v))
+        format!("{:?}", H256::from_uint(&v))
     } else {
         format!("{:x}", v)
     }

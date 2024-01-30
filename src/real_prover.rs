@@ -424,13 +424,13 @@ mod tests {
     use halo2_proofs::halo2curves::bn256::Fr;
 
     use super::*;
-    use crate::example_circuit::MyCircuit;
+    use crate::example_circuit::FactorisationCircuit;
 
     #[test]
     fn it_works() {
         let mut prover = RealProver::from(
             4,
-            MyCircuit {
+            FactorisationCircuit {
                 a: Fr::from(3),
                 b: Fr::from(7),
                 _marker: PhantomData,

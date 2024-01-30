@@ -9,21 +9,23 @@ use halo2_proofs::{
 use crate::{CircuitExt, FieldExt};
 
 #[derive(Clone)]
-pub struct MyConfig {
+pub struct FactorisationConfig {
     selector: Selector,
+    #[allow(dead_code)]
+    advice_temp: Column<Advice>,
     advice: Column<Advice>,
     instance: Column<Instance>,
 }
 
 #[derive(Clone, Default, Debug)]
-pub struct MyCircuit<F: FieldExt> {
+pub struct FactorisationCircuit<F: FieldExt> {
     pub a: F,
     pub b: F,
     pub _marker: PhantomData<F>,
 }
 
-impl<F: FieldExt> Circuit<F> for MyCircuit<F> {
-    type Config = MyConfig;
+impl<F: FieldExt> Circuit<F> for FactorisationCircuit<F> {
+    type Config = FactorisationConfig;
 
     type FloorPlanner = SimpleFloorPlanner;
 
@@ -33,6 +35,7 @@ impl<F: FieldExt> Circuit<F> for MyCircuit<F> {
 
     fn configure(meta: &mut halo2_proofs::plonk::ConstraintSystem<F>) -> Self::Config {
         let selector = meta.selector();
+        let advice_temp = meta.advice_column();
         let advice = meta.advice_column();
         let instance = meta.instance_column();
 
@@ -49,6 +52,7 @@ impl<F: FieldExt> Circuit<F> for MyCircuit<F> {
 
         Self::Config {
             selector,
+            advice_temp,
             advice,
             instance,
         }
@@ -62,6 +66,9 @@ impl<F: FieldExt> Circuit<F> for MyCircuit<F> {
         let product_cell = layouter.assign_region(
             || "region main",
             |mut region| {
+                region.name_column(|| "advice colm", config.advice);
+                region.name_column(|| "my selector", config.selector);
+
                 config.selector.enable(&mut region, 0)?;
                 let a_cell = region.assign_advice(
                     || "assign advice a",
@@ -86,12 +93,8 @@ impl<F: FieldExt> Circuit<F> for MyCircuit<F> {
     }
 }
 
-impl<F: FieldExt> CircuitExt<F> for MyCircuit<F> {
+impl<F: FieldExt> CircuitExt<F> for FactorisationCircuit<F> {
     fn instances(&self) -> Vec<Vec<F>> {
         vec![vec![self.a * self.b]]
-    }
-
-    fn annotations(&self) -> (Vec<&str>, Vec<&str>, Vec<&str>, Vec<&str>) {
-        (vec!["advice"], vec![], vec!["instance"], vec!["selector"])
     }
 }

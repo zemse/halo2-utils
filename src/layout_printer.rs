@@ -102,11 +102,11 @@ mod tests {
     use halo2_proofs::halo2curves::bn256::Fr;
 
     use super::*;
-    use crate::example_circuit::MyCircuit;
+    use crate::example_circuit::FactorisationCircuit;
 
     #[test]
     fn it_works() {
-        let circuit = MyCircuit::<Fr>::default();
+        let circuit = FactorisationCircuit::<Fr>::default();
         LayoutPrinter::from(&circuit).print();
     }
 }

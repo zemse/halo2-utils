@@ -6,7 +6,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-halo2_proofs = { git = "https://github.com/privacy-scaling-explorations/halo2.git", rev = "v0.3.0", features = ["dev-graph", "derive_serde"] } 
+# halo2_proofs = { git = "https://github.com/privacy-scaling-explorations/halo2.git", rev = "v0.3.0", features = ["dev-graph", "derive_serde"] } 
+halo2_proofs = { path = "../../external/pse/halo2/halo2_proofs", features = ["dev-graph", "derive_serde"] } 
+
 # halo2_gadgets = { git = "https://github.com/privacy-scaling-explorations/halo2.git", rev = "v0.3.0" } 
 # halo2_proofs = { path = "../../external/pse-halo2/halo2_proofs", features = ["dev-graph", "derive_serde"] } 
 # halo2_gadgets = { path = "../../external/pse-halo2/halo2_gadgets" } 

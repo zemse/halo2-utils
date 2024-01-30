@@ -2,11 +2,8 @@ use halo2_proofs::dev::MockProver;
 
 use crate::{CircuitExt, FieldExt};
 
-pub fn print<F: FieldExt, C: CircuitExt<F>>(
-    k: u32,
-    circuit: &C,
-) -> Result<(), halo2_proofs::plonk::Error> {
-    let prover: MockProver<F> = MockProver::run(k, circuit, circuit.instances())?;
+pub fn print<F: FieldExt, C: CircuitExt<F>>(k: u32, circuit: &C) {
+    let prover: MockProver<F> = MockProver::run(k, circuit, circuit.instances()).unwrap();
 
     let cs = prover.cs();
 
@@ -16,5 +13,4 @@ pub fn print<F: FieldExt, C: CircuitExt<F>>(
     println!("selectors columns: {:?}", prover.selectors().len());
     println!("gates: {:?}", cs.gates().len());
     println!("lookups: {:?}", cs.lookups().len());
-    Ok(())
 }

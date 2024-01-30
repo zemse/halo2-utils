@@ -20,9 +20,6 @@ use halo2_proofs::{
     plonk::Circuit,
 };
 pub trait CircuitExt<F: FieldExt>: Circuit<F> {
-    /// Annotations for advice, fixed, instance and selector columns.
-    fn annotations(&self) -> (Vec<&str>, Vec<&str>, Vec<&str>, Vec<&str>);
-
     /// Return the instances of the circuit.
     /// This may depend on extra circuit parameters but NOT on private witnesses.
     fn instances(&self) -> Vec<Vec<F>>;

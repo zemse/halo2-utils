@@ -29,6 +29,9 @@ impl<F: FieldExt> Circuit<F> for FactorisationCircuit<F> {
 
     type FloorPlanner = SimpleFloorPlanner;
 
+    #[cfg(feature = "circuit-params")]
+    type Params = ();
+
     fn without_witnesses(&self) -> Self {
         Self::default()
     }

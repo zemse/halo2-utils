@@ -22,6 +22,7 @@ serde = "1.0.188"
 serde_json = "1.0.107"
 
 [features]
-default = []
+default = ["circuit-params"]
+circuit-params = ["halo2_proofs/circuit-params"]
 # default = ["evm-verifier"]
 # evm-verifier = ["snark-verifier", "snark-verifier-sdk"]

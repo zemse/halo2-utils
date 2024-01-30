@@ -228,6 +228,8 @@ impl<ConcreteCircuit: Circuit<Fr> + CircuitExt<Fr> + Clone + Debug> RealProver<C
                     VerifyingKey::<G1Affine>::read::<File, ConcreteCircuit>(
                         &mut file,
                         self.serde_format,
+                        #[cfg(feature = "circuit-params")]
+                        self.circuit.params(),
                     )
                     .unwrap(),
                 );
@@ -254,6 +256,8 @@ impl<ConcreteCircuit: Circuit<Fr> + CircuitExt<Fr> + Clone + Debug> RealProver<C
                     ProvingKey::<G1Affine>::read::<File, ConcreteCircuit>(
                         &mut file,
                         self.serde_format,
+                        #[cfg(feature = "circuit-params")]
+                        self.circuit.params(),
                     )
                     .unwrap(),
                 );

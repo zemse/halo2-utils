@@ -6,7 +6,7 @@ use halo2_proofs::{
     halo2curves::ff,
 };
 
-use crate::{instance_value, CircuitExt, FieldExt};
+use crate::{estimate_k, instance_value, CircuitExt, FieldExt};
 
 use tabled::{
     builder::Builder,
@@ -21,13 +21,15 @@ pub enum Column {
     Selector(usize),
 }
 
+/// Prints columns which are selected by their name.
 pub fn print<F: FieldExt + ff::PrimeField, C: CircuitExt<F>>(
-    k: u32,
     circuit: &C,
     columns_to_print: Vec<&str>,
+    k: Option<u32>,
 ) where
     F::Repr: Sized + IndexMut<usize>,
 {
+    let k = k.unwrap_or_else(|| estimate_k(circuit));
     let prover: MockProver<F> = MockProver::run(k, circuit, circuit.instances()).unwrap();
 
     let mut table = Builder::default();
@@ -91,10 +93,12 @@ pub fn print<F: FieldExt + ff::PrimeField, C: CircuitExt<F>>(
     println!("{}", str);
 }
 
-pub fn print_all<F: FieldExt + ff::PrimeField, C: CircuitExt<F>>(k: u32, circuit: &C)
+/// Prints all the columns in the table.
+pub fn print_all<F: FieldExt + ff::PrimeField, C: CircuitExt<F>>(circuit: &C, k: Option<u32>)
 where
     F::Repr: Sized + IndexMut<usize>,
 {
+    let k = k.unwrap_or_else(|| estimate_k(circuit));
     let prover: MockProver<F> = MockProver::run(k, circuit, circuit.instances()).unwrap();
 
     let range = prover.usable_rows();

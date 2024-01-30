@@ -17,6 +17,9 @@ pub use layout_printer::LayoutPrinter;
 pub mod real_prover;
 pub use real_prover::RealProver;
 
+mod estimate_k;
+pub use estimate_k::estimate_k;
+
 use halo2_proofs::{
     halo2curves::{bn256::Fr, ff::FromUniformBytes, pasta::Fp},
     plonk::Circuit,

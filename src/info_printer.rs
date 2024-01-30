@@ -1,8 +1,10 @@
 use halo2_proofs::dev::MockProver;
 
-use crate::{CircuitExt, FieldExt};
+use crate::{estimate_k, CircuitExt, FieldExt};
 
-pub fn print<F: FieldExt, C: CircuitExt<F>>(k: u32, circuit: &C) {
+/// Prints the info for the circuit.
+pub fn print<F: FieldExt, C: CircuitExt<F>>(circuit: &C, k: Option<u32>) {
+    let k = k.unwrap_or_else(|| estimate_k(circuit));
     let prover: MockProver<F> = MockProver::run(k, circuit, circuit.instances()).unwrap();
 
     let cs = prover.cs();

@@ -2,6 +2,18 @@
 
 some basic utils to slightly improve dx with vanila [pse/halo2](https://github.com/privacy-scaling-explorations/halo2).
 
+## estimate k
+
+```rust
+let circuit = FactorisationCircuit {
+    a: Fr::from(2),
+    b: Fr::from(3),
+    _marker: std::marker::PhantomData,
+};
+
+halo2_utils::estimate_k(&circuit)
+```
+
 ## print assignments
 
 ```rust

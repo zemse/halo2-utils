@@ -2,6 +2,58 @@
 
 some basic utils to slightly improve dx with vanila [pse/halo2](https://github.com/privacy-scaling-explorations/halo2).
 
+## print assignments
+
+```rust
+let circuit = FactorisationCircuit {
+    a: Fr::from(2),
+    b: Fr::from(3),
+    _marker: std::marker::PhantomData,
+};
+
+halo2_utils::assignments::print_all(4, &circuit);
+```
+
+```
+cargo run --example print_assignment
+
+╭────────────────┬──────────────┬─────────────┬──────────────────╮
+│ unnamed advice │ advice colm  │ my selector │ unnamed instance │
+├────────────────┼──────────────┼─────────────┼──────────────────┤
+│ Unassigned     │ 2            │ 1           │ 6                │
+│ Unassigned     │ 3            │ 0           │ 0                │
+│ Unassigned     │ 6            │ 0           │ 0                │
+│ Unassigned     │ Unassigned   │ 0           │ 0                │
+│ Unassigned     │ Unassigned   │ 0           │ 0                │
+│ Unassigned     │ Unassigned   │ 0           │ 0                │
+│ Unassigned     │ Unassigned   │ 0           │ 0                │
+│ Unassigned     │ Unassigned   │ 0           │ 0                │
+│ Unassigned     │ Unassigned   │ 0           │ 0                │
+│ Unassigned     │ Unassigned   │ 0           │ 0                │
+│ Poisoned(10)   │ Poisoned(10) │ 0           │ 0                │
+╰────────────────┴──────────────┴─────────────┴──────────────────╯
+```
+
+## print info
+
+
+```rust
+let circuit = FactorisationCircuit::<Fr>::default();
+halo2_utils::info::print(4, &circuit);
+```
+
+```
+cargo run --example print_info
+
+advice columns: 2
+fixed columns: 1
+instance columns: 1
+selectors columns: 1
+gates: 1
+lookups: 0
+```
+
+
 ## generate layout diagrams
 
 abstracts some dependencies and auto estimates value of k.

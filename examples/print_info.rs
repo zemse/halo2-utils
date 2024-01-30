@@ -1,6 +1,4 @@
-use halo2_utils::{
-    example_circuit::FactorisationCircuit, halo2_proofs::halo2curves::bn256::Fr, info_printer,
-};
+use halo2_utils::{example_circuit::FactorisationCircuit, halo2_proofs::halo2curves::bn256::Fr};
 
 fn main() {
     let circuit = FactorisationCircuit {
@@ -9,9 +7,11 @@ fn main() {
         _marker: std::marker::PhantomData,
     };
 
-    info_printer::print(4, &circuit);
+    halo2_utils::info::print(4, &circuit);
 }
 
+// output
+//
 // advice columns: 2
 // fixed columns: 1
 // instance columns: 1

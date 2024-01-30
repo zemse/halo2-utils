@@ -91,11 +91,8 @@ pub fn print<F: FieldExt + ff::PrimeField, C: CircuitExt<F>>(
     println!("{}", str);
 }
 
-pub fn print_all<F: FieldExt + ff::PrimeField, C: CircuitExt<F>>(
-    k: u32,
-    circuit: &C,
-    skip: Option<Vec<Column>>,
-) where
+pub fn print_all<F: FieldExt + ff::PrimeField, C: CircuitExt<F>>(k: u32, circuit: &C)
+where
     F::Repr: Sized + IndexMut<usize>,
 {
     let prover: MockProver<F> = MockProver::run(k, circuit, circuit.instances()).unwrap();
@@ -112,10 +109,10 @@ pub fn print_all<F: FieldExt + ff::PrimeField, C: CircuitExt<F>>(
 
     let mut header: Vec<&str> = vec![];
     for (i, _) in advice.iter().enumerate() {
-        let should_skip = skip.as_ref().map(|skip| skip.contains(&Column::Advice(i)));
-        if should_skip.unwrap_or(false) {
-            continue;
-        }
+        // let should_skip = skip.as_ref().map(|skip| skip.contains(&Column::Advice(i)));
+        // if should_skip.unwrap_or(false) {
+        //     continue;
+        // }
         if let Some(name) = advice_annotations[i] {
             header.push(name);
         } else {
@@ -123,10 +120,10 @@ pub fn print_all<F: FieldExt + ff::PrimeField, C: CircuitExt<F>>(
         }
     }
     for (i, _) in fixed.iter().enumerate() {
-        let should_skip = skip.as_ref().map(|skip| skip.contains(&Column::Fixed(i)));
-        if should_skip.unwrap_or(false) {
-            continue;
-        }
+        // let should_skip = skip.as_ref().map(|skip| skip.contains(&Column::Fixed(i)));
+        // if should_skip.unwrap_or(false) {
+        //     continue;
+        // }
         if let Some(name) = fixed_annotations[i] {
             header.push(name);
         } else {
@@ -134,12 +131,12 @@ pub fn print_all<F: FieldExt + ff::PrimeField, C: CircuitExt<F>>(
         }
     }
     for (i, _) in instance.iter().enumerate() {
-        let should_skip = skip
-            .as_ref()
-            .map(|skip| skip.contains(&Column::Instance(i)));
-        if should_skip.unwrap_or(false) {
-            continue;
-        }
+        // let should_skip = skip
+        //     .as_ref()
+        //     .map(|skip| skip.contains(&Column::Instance(i)));
+        // if should_skip.unwrap_or(false) {
+        //     continue;
+        // }
         if let Some(name) = instance_annotations[i] {
             header.push(name);
         } else {
@@ -152,27 +149,27 @@ pub fn print_all<F: FieldExt + ff::PrimeField, C: CircuitExt<F>>(
 
     for row_id in range.start..=range.end {
         let mut row_data = vec![];
-        for (i, col) in advice.iter().enumerate() {
-            let should_skip = skip.as_ref().map(|skip| skip.contains(&Column::Advice(i)));
-            if should_skip.unwrap_or(false) {
-                continue;
-            }
+        for col in advice {
+            // let should_skip = skip.as_ref().map(|skip| skip.contains(&Column::Advice(i)));
+            // if should_skip.unwrap_or(false) {
+            //     continue;
+            // }
             row_data.push(format_cell_value(col[row_id]));
         }
-        for (i, col) in fixed.iter().enumerate() {
-            let should_skip = skip.as_ref().map(|skip| skip.contains(&Column::Fixed(i)));
-            if should_skip.unwrap_or(false) {
-                continue;
-            }
+        for col in fixed {
+            // let should_skip = skip.as_ref().map(|skip| skip.contains(&Column::Fixed(i)));
+            // if should_skip.unwrap_or(false) {
+            //     continue;
+            // }
             row_data.push(format_cell_value(col[row_id]));
         }
-        for (i, col) in instance.iter().enumerate() {
-            let should_skip = skip
-                .as_ref()
-                .map(|skip| skip.contains(&Column::Instance(i)));
-            if should_skip.unwrap_or(false) {
-                continue;
-            }
+        for col in instance {
+            // let should_skip = skip
+            //     .as_ref()
+            //     .map(|skip| skip.contains(&Column::Instance(i)));
+            // if should_skip.unwrap_or(false) {
+            //     continue;
+            // }
             row_data.push(format_value(instance_value(&col[row_id])));
         }
 

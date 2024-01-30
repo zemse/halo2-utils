@@ -7,9 +7,11 @@ mod utils;
 pub use utils::*;
 
 pub mod assignments_printer;
+pub use assignments_printer as assignments;
 pub mod info_printer;
+pub use info_printer as info;
 
-pub mod layout_printer;
+mod layout_printer;
 pub use layout_printer::LayoutPrinter;
 
 pub mod real_prover;

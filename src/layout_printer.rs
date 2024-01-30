@@ -96,17 +96,3 @@ impl<'a, F: Field, ConcreteCircuit: Circuit<F> + Debug> LayoutPrinter<'a, F, Con
     //     self
     // }
 }
-
-#[cfg(test)]
-mod tests {
-    use halo2_proofs::halo2curves::bn256::Fr;
-
-    use super::*;
-    use crate::example_circuit::FactorisationCircuit;
-
-    #[test]
-    fn it_works() {
-        let circuit = FactorisationCircuit::<Fr>::default();
-        LayoutPrinter::from(&circuit).print();
-    }
-}

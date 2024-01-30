@@ -1,7 +1,4 @@
-use halo2_utils::{
-    assignments_printer, example_circuit::FactorisationCircuit,
-    halo2_proofs::halo2curves::bn256::Fr,
-};
+use halo2_utils::{example_circuit::FactorisationCircuit, halo2_proofs::halo2curves::bn256::Fr};
 
 fn main() {
     let circuit = FactorisationCircuit {
@@ -10,9 +7,11 @@ fn main() {
         _marker: std::marker::PhantomData,
     };
 
-    assignments_printer::print_all(4, &circuit, None);
+    halo2_utils::assignments::print_all(4, &circuit);
 }
 
+// output
+//
 // ╭────────────────┬──────────────┬─────────────┬──────────────────╮
 // │ unnamed advice │ advice colm  │ my selector │ unnamed instance │
 // ├────────────────┼──────────────┼─────────────┼──────────────────┤

@@ -5,8 +5,12 @@ use halo2_proofs::{
 
 use crate::{estimate_k, parse_cell_value, RawField};
 
-pub fn get_number_of_instance_columns<F: RawField, C: Circuit<F>>() -> usize {
+#[cfg_attr(not(feature = "circuit-params"), allow(unused_variables))]
+pub fn get_number_of_instance_columns<F: RawField, C: Circuit<F>>(circuit: &C) -> usize {
     let mut cs = ConstraintSystem::<F>::default();
+    #[cfg(feature = "circuit-params")]
+    C::configure_with_params(&mut cs, circuit.params());
+    #[cfg(not(feature = "circuit-params"))]
     C::configure(&mut cs);
     cs.num_instance_columns()
 }
@@ -14,7 +18,7 @@ pub fn get_number_of_instance_columns<F: RawField, C: Circuit<F>>() -> usize {
 /// Finds the instances for the circuit using copy constraints.
 pub fn infer_instance<F: RawField, C: Circuit<F>>(circuit: &C, k: Option<u32>) -> Vec<Vec<F>> {
     let k = k.unwrap_or_else(|| estimate_k(circuit));
-    let num_instance = get_number_of_instance_columns::<F, C>();
+    let num_instance = get_number_of_instance_columns::<F, C>(circuit);
     let instance = vec![vec![]; num_instance];
     let prover: MockProver<F> = MockProver::run(k, circuit, instance).unwrap();
     let copy_constraints = prover.permutation().copy_constraints();

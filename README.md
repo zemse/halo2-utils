@@ -79,7 +79,7 @@ fn main() {
 }
 ```
 
-![example layout](./MyCircuit-layout.png)
+![example layout](./FactorisationCircuit-layout.png)
 
 ## real prover
 

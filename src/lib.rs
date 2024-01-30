@@ -20,10 +20,14 @@ pub use real_prover::RealProver;
 mod estimate_k;
 pub use estimate_k::estimate_k;
 
-use halo2_proofs::{
-    halo2curves::{bn256::Fr, ff::FromUniformBytes, pasta::Fp},
-    plonk::Circuit,
-};
+mod infer_instance;
+pub use infer_instance::infer_instance;
+
+use halo2_proofs::plonk::Circuit;
+
+pub mod field;
+pub use field::{FieldExt, RawField};
+
 pub trait CircuitExt<F: FieldExt>: Circuit<F> {
     /// Return the instances of the circuit.
     /// This may depend on extra circuit parameters but NOT on private witnesses.
@@ -36,14 +40,6 @@ pub trait CircuitExt<F: FieldExt>: Circuit<F> {
             .collect::<Vec<usize>>()
     }
 }
-
-pub trait FieldExt:
-    halo2_proofs::arithmetic::Field + From<u64> + FromUniformBytes<64> + Ord
-{
-}
-
-impl FieldExt for Fr {}
-impl FieldExt for Fp {}
 
 pub mod zkevm;
 pub use zkevm::{Expr, Scalar};

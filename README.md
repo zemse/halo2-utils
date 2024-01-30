@@ -65,6 +65,27 @@ gates: 1
 lookups: 0
 ```
 
+## infer instance
+
+Sometimes we are facing this error `Equality constraint not satisfied by cell (Column('Instance', 0 `. This error is due to incorrect instances passed in the MockProver which do not satisfy the copy constraints.
+
+Hence this util infers the values of the instances from the private witnesses using copy constraints and gives you a `Vec<Vec<F>>` that you can pass and make MockProver happy temporarily. Note this is only for debugging purposes.
+
+```rust
+ let circuit = FactorisationCircuit {
+    a: Fr::from(2),
+    b: Fr::from(3),
+    _marker: std::marker::PhantomData,
+};
+halo2_utils::infer_instance(&circuit, None)
+// [
+//     [
+//         0x0000000000000000000000000000000000000000000000000000000000000006,
+//     ],
+// ]
+
+```
+
 
 ## generate layout diagrams
 

@@ -189,7 +189,7 @@ where
     println!("{}", str);
 }
 
-fn format_cell_value<F: FieldExt + ff::PrimeField>(value: CellValue<F>) -> String {
+pub fn format_cell_value<F: FieldExt + ff::PrimeField>(value: CellValue<F>) -> String {
     match value {
         CellValue::Unassigned => "Unassigned".to_string(),
         CellValue::Assigned(f) => format_value(f),
@@ -233,7 +233,7 @@ where
     let regions = prover.regions();
 
     for region in regions {
-        for (col, name) in region.annotations.iter() {
+        for (col, name) in region.annotations().iter() {
             match col.column_type() {
                 halo2_proofs::plonk::Any::Advice(_) => advice_annotations[col.index()] = Some(name),
                 halo2_proofs::plonk::Any::Fixed => fixed_annotations[col.index()] = Some(name),

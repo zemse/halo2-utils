@@ -1,10 +1,12 @@
 use halo2_proofs::{
     arithmetic::Field,
-    dev::InstanceValue,
+    dev::{CellValue, InstanceValue},
     plonk::{Circuit, ConstraintSystem},
 };
 
 use std::fmt::Debug;
+
+use crate::RawField;
 
 pub fn derive_k<F, ConcreteCircuit>() -> u32
 where
@@ -34,5 +36,13 @@ pub fn instance_value<F: Field>(val: &InstanceValue<F>) -> F {
     match val {
         InstanceValue::Assigned(v) => *v,
         InstanceValue::Padding => F::ZERO,
+    }
+}
+
+pub fn parse_cell_value<F: RawField>(value: CellValue<F>) -> F {
+    match value {
+        CellValue::Unassigned => F::ZERO,
+        CellValue::Assigned(f) => f,
+        CellValue::Poison(v) => F::from(v as u64),
     }
 }

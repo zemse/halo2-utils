@@ -1,5 +1,6 @@
 use halo2_proofs::{
     arithmetic::Field,
+    dev::InstanceValue,
     plonk::{Circuit, ConstraintSystem},
 };
 
@@ -26,5 +27,12 @@ where
         circuit_format
     } else {
         panic!("no space found in '{}'", circuit_format);
+    }
+}
+
+pub fn instance_value<F: Field>(val: &InstanceValue<F>) -> F {
+    match val {
+        InstanceValue::Assigned(v) => *v,
+        InstanceValue::Padding => F::ZERO,
     }
 }

@@ -6,10 +6,12 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-halo2_proofs = { git = "https://github.com/privacy-scaling-explorations/halo2.git", rev = "0c3e3b56", features = ["dev-graph"] } 
-halo2_gadgets = { git = "https://github.com/privacy-scaling-explorations/halo2.git", rev = "0c3e3b56" } 
-snark-verifier-sdk = { git = "https://github.com/privacy-scaling-explorations/snark-verifier.git", rev = "37b99a31", optional = true } 
-snark-verifier = { git = "https://github.com/privacy-scaling-explorations/snark-verifier.git", rev = "37b99a31", optional = true } 
+halo2_proofs = { git = "https://github.com/privacy-scaling-explorations/halo2.git", rev = "v0.3.0", features = ["dev-graph", "derive_serde"] } 
+# halo2_gadgets = { git = "https://github.com/privacy-scaling-explorations/halo2.git", rev = "v0.3.0" } 
+# halo2_proofs = { path = "../../external/pse-halo2/halo2_proofs", features = ["dev-graph", "derive_serde"] } 
+# halo2_gadgets = { path = "../../external/pse-halo2/halo2_gadgets" } 
+# snark-verifier-sdk = { git = "https://github.com/privacy-scaling-explorations/snark-verifier.git", rev = "37b99a31", optional = true } 
+# snark-verifier = { git = "https://github.com/privacy-scaling-explorations/snark-verifier.git", rev = "37b99a31", optional = true } 
 plotters = "0.3.4"
 rand_chacha = "0.3"
 tabled = "0.14.0"
@@ -17,10 +19,7 @@ ethers = "2.0.7"
 serde = "1.0.188"
 serde_json = "1.0.107"
 
-[patch."https://github.com/privacy-scaling-explorations/halo2.git"]
-halo2_proofs = { path = "../../external/pse-halo2/halo2_proofs", features = ["dev-graph"] } 
-halo2_gadgets = { path = "../../external/pse-halo2/halo2_gadgets" } 
-
 [features]
-default = ["evm-verifier"]
-evm-verifier = ["snark-verifier", "snark-verifier-sdk"]
+default = []
+# default = ["evm-verifier"]
+# evm-verifier = ["snark-verifier", "snark-verifier-sdk"]

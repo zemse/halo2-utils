@@ -6,7 +6,7 @@ use halo2_proofs::{
     halo2curves::ff,
 };
 
-use crate::{CircuitExt, FieldExt};
+use crate::{instance_value, CircuitExt, FieldExt};
 
 use tabled::{
     builder::Builder,
@@ -85,7 +85,7 @@ where
             |c| match c {
                 Column::Advice(i) => format_cell_value(advice[*i][row_id]),
                 Column::Fixed(i) => format_cell_value(fixed[*i][row_id]),
-                Column::Instance(i) => format_value(instance[*i][row_id]),
+                Column::Instance(i) => format_value(instance_value(&instance[*i][row_id])),
                 Column::Selector(i) => {
                     if selectors[*i][row_id] {
                         "1".to_string()
@@ -205,7 +205,7 @@ where
             if should_skip.unwrap_or(false) {
                 continue;
             }
-            row_data.push(format_value(col[row_id]));
+            row_data.push(format_value(instance_value(&col[row_id])));
         }
         for (i, col) in selectors.iter().enumerate() {
             let should_skip = skip

@@ -70,7 +70,7 @@ impl<F: FieldExt> Circuit<F> for FactorisationCircuit<F> {
             || "region main",
             |mut region| {
                 region.name_column(|| "advice colm", config.advice);
-                region.name_column(|| "my selector", config.selector);
+                // region.name_column(|| "my selector", config.selector);
 
                 config.selector.enable(&mut region, 0)?;
                 let a_cell = region.assign_advice(

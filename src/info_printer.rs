@@ -1,18 +1,19 @@
-use halo2_proofs::dev::MockProver;
+use halo2_proofs::plonk::{Circuit, ConstraintSystem};
 
-use crate::{estimate_k, CircuitExt, FieldExt};
+use crate::RawField;
 
 /// Prints the info for the circuit.
-pub fn print<F: FieldExt, C: CircuitExt<F>>(circuit: &C, k: Option<u32>) {
-    let k = k.unwrap_or_else(|| estimate_k(circuit));
-    let prover: MockProver<F> = MockProver::run(k, circuit, circuit.instances()).unwrap();
+pub fn print<F: RawField, C: Circuit<F>>(circuit: &C) {
+    let mut cs = ConstraintSystem::default();
+    #[cfg(feature = "circuit-params")]
+    C::configure_with_params(&mut cs, circuit.params());
+    #[cfg(not(feature = "circuit-params"))]
+    C::configure(&mut cs);
 
-    let cs = prover.cs();
-
-    println!("advice columns: {:?}", prover.advice().len());
-    println!("fixed columns: {:?}", prover.fixed().len());
-    println!("instance columns: {:?}", prover.instance().len());
-    println!("selectors columns: {:?}", prover.selectors().len());
+    println!("advice columns: {:?}", cs.num_advice_columns());
+    println!("fixed columns: {:?}", cs.num_fixed_columns());
+    println!("instance columns: {:?}", cs.num_instance_columns());
+    println!("selectors columns: {:?}", cs.num_selectors());
     println!("gates: {:?}", cs.gates().len());
     println!("lookups: {:?}", cs.lookups().len());
 }

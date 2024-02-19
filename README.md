@@ -65,6 +65,17 @@ gates: 1
 lookups: 0
 ```
 
+## compare halo2 circuits
+
+Compare all the columns and rows in a huge plonkish table and see what is not matching. This can be helpful to debug in very specific cases where you have two similar circuits and want to make sure second circuit performs assignments exactly as the first circuit.
+
+```rust
+let circuit1 = ...;
+let circuit2 = ...;
+
+halo2_utils::compare::compare_all(&super_circuit, &my_circuit, Some(k));
+```
+
 ## infer instance
 
 Sometimes we are facing this error `Equality constraint not satisfied by cell (Column('Instance', 0 `. This error is due to incorrect instances passed in the MockProver which do not satisfy the copy constraints.

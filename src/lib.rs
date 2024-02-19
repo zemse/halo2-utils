@@ -28,6 +28,8 @@ use halo2_proofs::plonk::Circuit;
 pub mod field;
 pub use field::{FieldExt, RawField};
 
+pub mod compare;
+
 pub trait CircuitExt<F: FieldExt>: Circuit<F> {
     /// Return the instances of the circuit.
     /// This may depend on extra circuit parameters but NOT on private witnesses.

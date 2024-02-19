@@ -7,7 +7,7 @@ fn main() {
         _marker: std::marker::PhantomData,
     };
 
-    halo2_utils::info::print(&circuit, Some(4));
+    halo2_utils::info::print(&circuit);
 }
 
 // output

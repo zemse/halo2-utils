@@ -4,9 +4,13 @@ use ethers::types::{BigEndianHash, H256, U256};
 use halo2_proofs::{
     dev::{CellValue, MockProver},
     halo2curves::ff,
+    plonk::Circuit,
 };
 
-use crate::{estimate_k, instance_value, CircuitExt, FieldExt};
+use crate::{
+    estimate_k, infer_instance::get_number_of_instance_columns, instance_value, CircuitExt,
+    FieldExt, RawField,
+};
 
 use tabled::{
     builder::Builder,
@@ -94,12 +98,14 @@ pub fn print<F: FieldExt + ff::PrimeField, C: CircuitExt<F>>(
 }
 
 /// Prints all the columns in the table.
-pub fn print_all<F: FieldExt + ff::PrimeField, C: CircuitExt<F>>(circuit: &C, k: Option<u32>)
+pub fn print_all<F: RawField, C: Circuit<F>>(circuit: &C, k: Option<u32>, max_rows: Option<usize>)
 where
     F::Repr: Sized + IndexMut<usize>,
 {
     let k = k.unwrap_or_else(|| estimate_k(circuit));
-    let prover: MockProver<F> = MockProver::run(k, circuit, circuit.instances()).unwrap();
+
+    let num_instance = get_number_of_instance_columns(circuit);
+    let prover: MockProver<F> = MockProver::run(k, circuit, vec![vec![]; num_instance]).unwrap();
 
     let range = prover.usable_rows();
 
@@ -151,7 +157,11 @@ where
     let mut table = Builder::default();
     table.set_header(header);
 
-    for row_id in range.start..=range.end {
+    let range_end = max_rows
+        .map(|mr| std::cmp::min(mr, range.end))
+        .unwrap_or(range.end);
+
+    for row_id in range.start..=range_end {
         let mut row_data = vec![];
         for col in advice {
             // let should_skip = skip.as_ref().map(|skip| skip.contains(&Column::Advice(i)));
@@ -189,7 +199,7 @@ where
     println!("{}", str);
 }
 
-pub fn format_cell_value<F: FieldExt + ff::PrimeField>(value: CellValue<F>) -> String {
+pub fn format_cell_value<F: RawField>(value: CellValue<F>) -> String {
     match value {
         CellValue::Unassigned => "Unassigned".to_string(),
         CellValue::Assigned(f) => format_value(f),
@@ -204,7 +214,7 @@ pub fn format_cell_value<F: FieldExt + ff::PrimeField>(value: CellValue<F>) -> S
 //     }
 // }
 
-fn format_value<F: FieldExt + ff::PrimeField>(f: F) -> String {
+fn format_value<F: RawField>(f: F) -> String {
     let v = f.to_repr();
     let v = v.as_ref();
     let v = U256::from_little_endian(v);
@@ -216,7 +226,7 @@ fn format_value<F: FieldExt + ff::PrimeField>(f: F) -> String {
 }
 
 #[allow(clippy::type_complexity)]
-fn get_annotations<F: FieldExt + ff::PrimeField>(
+fn get_annotations<F: RawField>(
     prover: &MockProver<F>,
 ) -> (Vec<Option<&str>>, Vec<Option<&str>>, Vec<Option<&str>>)
 where

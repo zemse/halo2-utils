@@ -6,8 +6,11 @@ mod utils;
 
 pub use utils::*;
 
+#[cfg(feature = "latest-halo2")]
 pub mod assignments_printer;
+#[cfg(feature = "latest-halo2")]
 pub use assignments_printer as assignments;
+
 pub mod info_printer;
 pub use info_printer as info;
 
@@ -17,7 +20,9 @@ pub use layout_printer::LayoutPrinter;
 pub mod real_prover;
 pub use real_prover::RealProver;
 
+#[cfg(feature = "latest-halo2")]
 mod estimate_k;
+#[cfg(feature = "latest-halo2")]
 pub use estimate_k::estimate_k;
 
 mod infer_instance;

@@ -2,7 +2,11 @@ use crate::halo2_proofs::plonk::{Circuit, ConstraintSystem};
 
 use crate::RawField;
 
-#[cfg_attr(not(feature = "circuit-params"), allow(unused_variables))]
+#[cfg_attr(
+    not(feature = "circuit-params"),
+    allow(unused_variables),
+    allow(dead_code)
+)]
 pub fn get_number_of_instance_columns<F: RawField, C: Circuit<F>>(
     #[cfg(feature = "circuit-params")] circuit: &C,
 ) -> usize {

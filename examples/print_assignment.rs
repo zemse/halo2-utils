@@ -7,6 +7,7 @@ fn main() {
         _marker: std::marker::PhantomData,
     };
 
+    #[cfg(feature = "latest-halo2")]
     halo2_utils::assignments::print_all(&circuit, Some(4), None);
 }
 

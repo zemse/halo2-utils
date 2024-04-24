@@ -6,5 +6,6 @@ fn main() {
         b: Fr::from(3),
         _marker: std::marker::PhantomData,
     };
+    #[cfg(feature = "latest-halo2")]
     println!("{:?}", halo2_utils::estimate_k(&circuit))
 }

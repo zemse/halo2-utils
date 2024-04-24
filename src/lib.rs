@@ -26,7 +26,7 @@ mod estimate_k;
 pub use estimate_k::estimate_k;
 
 mod infer_instance;
-// pub use infer_instance::infer_instance;
+pub use infer_instance::infer_instance;
 
 use halo2_proofs::plonk::Circuit;
 

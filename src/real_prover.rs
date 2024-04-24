@@ -1,6 +1,4 @@
-#[allow(unused_imports)]
-use crate::{derive_circuit_name, error::Error, CircuitExt, FieldExt};
-use halo2_proofs::{
+use crate::halo2_proofs::{
     halo2curves::bn256::{Bn256, Fr, G1Affine},
     plonk::{create_proof, keygen_pk, keygen_vk, verify_proof, Circuit, ProvingKey, VerifyingKey},
     poly::{
@@ -16,6 +14,8 @@ use halo2_proofs::{
     },
     SerdeFormat,
 };
+#[allow(unused_imports)]
+use crate::{derive_circuit_name, error::Error, CircuitExt, FieldExt};
 use rand_chacha::{rand_core::SeedableRng, ChaCha20Rng, ChaChaRng};
 use serde::{Deserialize, Serialize};
 use std::{
@@ -425,7 +425,7 @@ impl RealVerifier {
 mod tests {
     use std::marker::PhantomData;
 
-    use halo2_proofs::halo2curves::bn256::Fr;
+    use crate::halo2_proofs::halo2curves::bn256::Fr;
 
     use super::*;
     use crate::example_circuit::FactorisationCircuit;

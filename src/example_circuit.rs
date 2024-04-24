@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use halo2_proofs::{
+use crate::halo2_proofs::{
     circuit::{SimpleFloorPlanner, Value},
     plonk::{Advice, Circuit, Column, Instance, Selector},
     poly::Rotation,
@@ -29,14 +29,14 @@ impl<F: FieldExt> Circuit<F> for FactorisationCircuit<F> {
 
     type FloorPlanner = SimpleFloorPlanner;
 
-    #[cfg(feature = "circuit-params")]
-    type Params = ();
+    // #[cfg(feature = "circuit-params")]
+    // type Params = ();
 
     fn without_witnesses(&self) -> Self {
         Self::default()
     }
 
-    fn configure(meta: &mut halo2_proofs::plonk::ConstraintSystem<F>) -> Self::Config {
+    fn configure(meta: &mut crate::halo2_proofs::plonk::ConstraintSystem<F>) -> Self::Config {
         let selector = meta.selector();
         let advice_temp = meta.advice_column();
         let advice = meta.advice_column();
@@ -64,8 +64,8 @@ impl<F: FieldExt> Circuit<F> for FactorisationCircuit<F> {
     fn synthesize(
         &self,
         config: Self::Config,
-        mut layouter: impl halo2_proofs::circuit::Layouter<F>,
-    ) -> Result<(), halo2_proofs::plonk::Error> {
+        mut layouter: impl crate::halo2_proofs::circuit::Layouter<F>,
+    ) -> Result<(), crate::halo2_proofs::plonk::Error> {
         let product_cell = layouter.assign_region(
             || "region main",
             |mut region| {

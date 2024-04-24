@@ -1,4 +1,4 @@
-use halo2_proofs::{
+use crate::halo2_proofs::{
     arithmetic::Field,
     dev::{CellValue, InstanceValue},
     plonk::{Circuit, ConstraintSystem},
@@ -44,5 +44,6 @@ pub fn parse_cell_value<F: RawField>(value: CellValue<F>) -> F {
         CellValue::Unassigned => F::ZERO,
         CellValue::Assigned(f) => f,
         CellValue::Poison(v) => F::from(v as u64),
+        // CellValue::Rational(n, _) => n,
     }
 }

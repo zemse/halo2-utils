@@ -2,7 +2,7 @@ use std::ops::IndexMut;
 
 use ethers::types::{BigEndianHash, H256, U256};
 use halo2_proofs::{
-    dev::{CellValue, InstanceValue, MockProver},
+    dev::{CellValue, MockProver},
     plonk::Circuit,
 };
 
@@ -35,14 +35,14 @@ pub fn compare_all<F: RawField, C1: Circuit<F>, C2: Circuit<F>>(
 
     // let range = prover1.usable_rows();
 
-    let advice1 = prover1.advice();
-    let fixed1 = prover1.fixed();
+    let advice1 = &prover1.advice;
+    let fixed1 = &prover1.fixed;
     // let instance1 = prover1.instance();
     let (advice_annotations1, fixed_annotations1, _instance_annotations1) =
         get_annotations(&prover1);
 
-    let advice2 = prover2.advice();
-    let fixed2 = prover2.fixed();
+    let advice2 = prover2.advice;
+    let fixed2 = prover2.fixed;
     // let instance2 = prover2.instance();
     // let (advice_annotations2, fixed_annotations2, instance_annotations2) =
     //     get_annotations(&prover2);
@@ -156,12 +156,12 @@ pub fn unwrap_cell_value<F: RawField>(value: CellValue<F>) -> F {
     }
 }
 
-pub fn unwrap_instance_value<F: RawField>(value: &InstanceValue<F>) -> F {
-    match value {
-        InstanceValue::Assigned(f) => *f,
-        InstanceValue::Padding => F::ZERO,
-    }
-}
+// pub fn unwrap_instance_value<F: RawField>(value: &InstanceValue<F>) -> F {
+//     match value {
+//         InstanceValue::Assigned(f) => *f,
+//         InstanceValue::Padding => F::ZERO,
+//     }
+// }
 
 // fn format_instance_value<F: FieldExt + ff::PrimeField>(value: InstanceValue<F>) -> String {
 //     match value {
@@ -182,30 +182,32 @@ fn format_value<F: RawField>(f: F) -> String {
 }
 
 #[allow(clippy::type_complexity)]
-fn get_annotations<F: RawField>(
+fn get_annotations<'a, F: RawField>(
     prover: &MockProver<F>,
-) -> (Vec<Option<&str>>, Vec<Option<&str>>, Vec<Option<&str>>)
+) -> (
+    Vec<Option<&'a str>>,
+    Vec<Option<&'a str>>,
+    Vec<Option<&'a str>>,
+)
 where
     F::Repr: Sized + IndexMut<usize>,
 {
-    let advice = prover.advice();
+    let advice = prover.advice;
     let fixed = prover.fixed();
-    let instance = prover.instance();
+    let instance = prover.instance;
 
     let mut advice_annotations: Vec<Option<&str>> = (0..advice.len()).map(|_| None).collect();
     let mut fixed_annotations: Vec<Option<&str>> = (0..fixed.len()).map(|_| None).collect();
     let mut instance_annotations: Vec<Option<&str>> = (0..instance.len()).map(|_| None).collect();
 
-    let regions = prover.regions();
+    let regions = prover.regions;
 
     for region in regions {
-        for (col, name) in region.annotations().iter() {
-            match col.column_type() {
-                halo2_proofs::plonk::Any::Advice(_) => advice_annotations[col.index()] = Some(name),
-                halo2_proofs::plonk::Any::Fixed => fixed_annotations[col.index()] = Some(name),
-                halo2_proofs::plonk::Any::Instance => {
-                    instance_annotations[col.index()] = Some(name)
-                }
+        for (col, name) in region.annotations.iter() {
+            match col.column_type {
+                halo2_proofs::plonk::Any::Advice(_) => advice_annotations[col.index] = Some(name),
+                halo2_proofs::plonk::Any::Fixed => fixed_annotations[col.index] = Some(name),
+                halo2_proofs::plonk::Any::Instance => instance_annotations[col.index] = Some(name),
             }
         }
     }

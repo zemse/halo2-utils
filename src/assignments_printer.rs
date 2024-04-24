@@ -1,15 +1,14 @@
 use std::{iter, ops::IndexMut};
 
-use ethers::types::{BigEndianHash, H256, U256};
-use halo2_proofs::{
+use crate::halo2_proofs::{
     dev::{CellValue, MockProver},
     halo2curves::ff,
-    plonk::Circuit,
+    plonk::{Any, Circuit},
 };
+use ethers::types::{BigEndianHash, H256, U256};
 
 use crate::{
-    estimate_k, infer_instance::get_number_of_instance_columns, instance_value, CircuitExt,
-    FieldExt, RawField,
+    estimate_k, infer_instance::get_number_of_instance_columns, instance_value, FieldExt, RawField,
 };
 
 use tabled::{
@@ -26,15 +25,20 @@ pub enum Column {
 }
 
 /// Prints columns which are selected by their name.
-pub fn print<F: FieldExt + ff::PrimeField, C: CircuitExt<F>>(
+pub fn print<F: FieldExt + ff::PrimeField, C: Circuit<F>>(
     circuit: &C,
     columns_to_print: Vec<&str>,
     k: Option<u32>,
+    max_rows: Option<usize>,
 ) where
     F::Repr: Sized + IndexMut<usize>,
 {
     let k = k.unwrap_or_else(|| estimate_k(circuit));
-    let prover: MockProver<F> = MockProver::run(k, circuit, circuit.instances()).unwrap();
+    let num_instance = get_number_of_instance_columns::<F, C>(
+        #[cfg(feature = "circuit-params")]
+        circuit,
+    );
+    let prover: MockProver<F> = MockProver::run(k, circuit, vec![vec![]; num_instance]).unwrap();
 
     let mut table = Builder::default();
 
@@ -77,7 +81,11 @@ pub fn print<F: FieldExt + ff::PrimeField, C: CircuitExt<F>>(
     let fixed = prover.fixed();
     let instance = prover.instance();
 
-    for row_id in range.start..=range.end {
+    let range_end = max_rows
+        .map(|mr| std::cmp::min(mr, range.end))
+        .unwrap_or(range.end);
+
+    for row_id in range.start..=range_end {
         table.push_record(iter::once(row_id.to_string()).chain(col_indexes.iter().map(
             |c| match c {
                 Column::Advice(i) => format_cell_value(advice[*i][row_id]),
@@ -104,7 +112,10 @@ where
 {
     let k = k.unwrap_or_else(|| estimate_k(circuit));
 
-    let num_instance = get_number_of_instance_columns(circuit);
+    let num_instance = get_number_of_instance_columns::<F, C>(
+        #[cfg(feature = "circuit-params")]
+        circuit,
+    );
     let prover: MockProver<F> = MockProver::run(k, circuit, vec![vec![]; num_instance]).unwrap();
 
     let range = prover.usable_rows();
@@ -204,6 +215,7 @@ pub fn format_cell_value<F: RawField>(value: CellValue<F>) -> String {
         CellValue::Unassigned => "Unassigned".to_string(),
         CellValue::Assigned(f) => format_value(f),
         CellValue::Poison(v) => format!("Poisoned({})", v),
+        // CellValue::Rational(n, d) => format!("Rational({},{})", format_value(n), format_value(d)),
     }
 }
 
@@ -245,11 +257,9 @@ where
     for region in regions {
         for (col, name) in region.annotations().iter() {
             match col.column_type() {
-                halo2_proofs::plonk::Any::Advice(_) => advice_annotations[col.index()] = Some(name),
-                halo2_proofs::plonk::Any::Fixed => fixed_annotations[col.index()] = Some(name),
-                halo2_proofs::plonk::Any::Instance => {
-                    instance_annotations[col.index()] = Some(name)
-                }
+                Any::Advice(_) => advice_annotations[col.index()] = Some(name),
+                Any::Fixed => fixed_annotations[col.index()] = Some(name),
+                Any::Instance => instance_annotations[col.index()] = Some(name),
             }
         }
     }

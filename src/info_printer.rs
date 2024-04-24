@@ -1,9 +1,10 @@
-use halo2_proofs::plonk::{Circuit, ConstraintSystem};
+use crate::halo2_proofs::plonk::{Circuit, ConstraintSystem};
 
 use crate::RawField;
 
 /// Prints the info for the circuit.
-pub fn print<F: RawField, C: Circuit<F>>(circuit: &C) {
+pub fn print<F: RawField, C: Circuit<F>>(#[cfg(feature = "circuit-params")] circuit: &C) {
+    #[cfg(not(feature = "circuit-params"))]
     let mut cs = ConstraintSystem::default();
     #[cfg(feature = "circuit-params")]
     C::configure_with_params(&mut cs, circuit.params());

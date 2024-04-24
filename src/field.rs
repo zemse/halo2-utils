@@ -1,6 +1,6 @@
-use halo2_proofs::halo2curves::{bn256::Fr, ff::FromUniformBytes, pasta::Fp};
+use crate::halo2_proofs::halo2curves::{bn256::Fr, ff::FromUniformBytes, pasta::Fp};
 
-pub trait RawField: halo2_proofs::arithmetic::Field + FromUniformBytes<64> + Ord {}
+pub trait RawField: crate::halo2_proofs::arithmetic::Field + FromUniformBytes<64> + Ord {}
 impl RawField for Fr {}
 impl RawField for Fp {}
 

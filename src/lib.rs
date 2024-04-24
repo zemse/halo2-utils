@@ -21,14 +21,14 @@ mod estimate_k;
 pub use estimate_k::estimate_k;
 
 mod infer_instance;
-pub use infer_instance::infer_instance;
+// pub use infer_instance::infer_instance;
 
 use halo2_proofs::plonk::Circuit;
 
 pub mod field;
 pub use field::{FieldExt, RawField};
 
-pub mod compare;
+// pub mod compare;
 
 pub trait CircuitExt<F: FieldExt>: Circuit<F> {
     /// Return the instances of the circuit.
@@ -49,7 +49,10 @@ pub use zkevm::{Expr, Scalar};
 // export dependencies
 pub use ethers;
 // pub use halo2_gadgets;
-pub use halo2_proofs;
+#[cfg(feature = "latest-halo2")]
+pub use halo2_proofs_latest as halo2_proofs;
+#[cfg(feature = "v030-halo2")]
+pub use halo2_proofs_v030 as halo2_proofs;
 pub use plotters;
 pub use rand_chacha;
 #[cfg(feature = "evm-verifier")]

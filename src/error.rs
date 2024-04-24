@@ -1,4 +1,4 @@
-use halo2_proofs::plonk;
+use crate::halo2_proofs::plonk;
 
 #[derive(Debug)]
 pub enum Error {

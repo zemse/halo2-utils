@@ -1,6 +1,6 @@
 use std::{fmt::Debug, marker::PhantomData};
 
-use halo2_proofs::{arithmetic::Field, dev::CircuitLayout, plonk::Circuit};
+use crate::halo2_proofs::{arithmetic::Field, dev::CircuitLayout, plonk::Circuit};
 use plotters::prelude::*;
 
 use crate::{derive_circuit_name, utils::derive_k};

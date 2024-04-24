@@ -1,4 +1,4 @@
-use halo2_proofs::plonk::Expression;
+use crate::halo2_proofs::plonk::Expression;
 
 use crate::FieldExt;
 

@@ -1,3 +1,5 @@
+#![feature(int_log)]
+
 pub mod example_circuit;
 
 pub mod error;
@@ -17,12 +19,14 @@ pub use info_printer as info;
 mod layout_printer;
 pub use layout_printer::LayoutPrinter;
 
+#[cfg(any(feature = "v030-halo2", feature = "latest-halo2"))]
 pub mod real_prover;
+#[cfg(any(feature = "v030-halo2", feature = "latest-halo2"))]
 pub use real_prover::RealProver;
 
-#[cfg(feature = "latest-halo2")]
+// #[cfg(feature = "latest-halo2")]
 mod estimate_k;
-#[cfg(feature = "latest-halo2")]
+// #[cfg(feature = "latest-halo2")]
 pub use estimate_k::estimate_k;
 
 mod infer_instance;
@@ -52,12 +56,18 @@ pub mod zkevm;
 pub use zkevm::{Expr, Scalar};
 
 // export dependencies
-pub use ethers;
+// pub use ethers;
 // pub use halo2_gadgets;
+
 #[cfg(feature = "latest-halo2")]
 pub use halo2_proofs_latest as halo2_proofs;
+
 #[cfg(feature = "v030-halo2")]
 pub use halo2_proofs_v030 as halo2_proofs;
+
+#[cfg(feature = "v2022_08_19-halo2")]
+pub use halo2_proofs_v2022_08_19 as halo2_proofs;
+
 pub use plotters;
 pub use rand_chacha;
 #[cfg(feature = "evm-verifier")]

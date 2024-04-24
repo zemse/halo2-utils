@@ -1,5 +1,5 @@
-use halo2_proofs_latest::halo2curves::bn256::Fr;
 use halo2_utils::example_circuit::FactorisationCircuit;
+use halo2_utils::halo2_proofs::halo2curves::bn256::Fr;
 
 fn main() {
     let circuit = FactorisationCircuit {

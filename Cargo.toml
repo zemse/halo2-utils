@@ -6,10 +6,14 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-halo2_proofs_v030 = { git = "https://github.com/privacy-scaling-explorations/halo2.git", package = "halo2_proofs", rev = "v0.3.0", features = ["dev-graph", "derive_serde"], optional = true } 
+# halo2_proofs_v030 = { git = "https://github.com/privacy-scaling-explorations/halo2.git", package = "halo2_proofs", rev = "v0.3.0", features = ["dev-graph", "derive_serde"], optional = true } 
+# halo2_proofs_v030 = { git = "https://github.com/zemse/halo2.git", package = "halo2_proofs", branch = "v030-mod", features = ["dev-graph", "derive_serde"], optional = true } 
 
 # halo2_proofs_latest = { git = "https://github.com/privacy-scaling-explorations/halo2.git", package = "halo2_proofs", rev = "bc30c465", features = ["dev-graph", "derive_serde"], optional = true } 
-halo2_proofs_latest = { git = "https://github.com/zemse/halo2.git", package = "halo2_proofs", branch = "utils-latest", features = ["dev-graph", "derive_serde"], optional = true } 
+# halo2_proofs_latest = { git = "https://github.com/zemse/halo2.git", package = "halo2_proofs", branch = "latest-mod", features = ["dev-graph", "derive_serde"], optional = true } 
+
+# halo2_proofs_v2022_08_19 = { git = "https://github.com/zemse/halo2.git", package = "halo2_proofs", branch = "v2022_08_19-mod", features = ["dev-graph"], optional = true } 
+halo2_proofs_v2022_08_19 = { path = "../../external/pse/halo2/halo2_proofs", package = "halo2_proofs", features = ["dev-graph"], optional = true } 
 
 # halo2_gadgets = { git = "https://github.com/privacy-scaling-explorations/halo2.git", rev = "v0.3.0" } 
 # halo2_proofs = { path = "../../external/pse-halo2/halo2_proofs", features = ["dev-graph", "derive_serde"] } 
@@ -19,20 +23,23 @@ halo2_proofs_latest = { git = "https://github.com/zemse/halo2.git", package = "h
 plotters = "0.3.4"
 rand_chacha = "0.3"
 tabled = "0.14.0"
-ethers = "2.0.7"
+# ethers = "2.0.7"
 serde = "1.0.188"
 serde_json = "1.0.107"
 
 [features]
-default = ["latest-halo2"]
+default = ["v2022_08_19-halo2"]
 # default = ["v030-halo2"]
 
 # latest
-latest-halo2 = ["dep:halo2_proofs_latest"]
-latest-circuit-params = ["halo2_proofs_latest/circuit-params"]
+# latest-halo2 = ["halo2_proofs_latest"]
+# latest-circuit-params = ["halo2_proofs_latest/circuit-params"]
 
 # v030
-v030-halo2 = ["dep:halo2_proofs_v030"]
-v030-circuit-params = ["halo2_proofs_v030/circuit-params"]
+# v030-halo2 = ["halo2_proofs_v030"]
+# v030-circuit-params = ["halo2_proofs_v030/circuit-params"]
+
+# v2022_08_19
+v2022_08_19-halo2 = ["dep:halo2_proofs_v2022_08_19"]
 
 # evm-verifier = ["snark-verifier", "snark-verifier-sdk"]

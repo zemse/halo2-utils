@@ -1,5 +1,5 @@
 use crate::halo2_proofs::{
-    arithmetic::Field,
+    arithmetic::{Field, Group},
     dev::{CellValue, InstanceValue},
     plonk::{Circuit, ConstraintSystem},
 };
@@ -35,13 +35,19 @@ where
 pub fn instance_value<F: Field>(val: &InstanceValue<F>) -> F {
     match val {
         InstanceValue::Assigned(v) => *v,
+        #[cfg(any(feature = "v030-halo2", feature = "latest-halo2"))]
         InstanceValue::Padding => F::ZERO,
+        #[cfg(not(any(feature = "v030-halo2", feature = "latest-halo2")))]
+        InstanceValue::Padding => F::zero(),
     }
 }
 
-pub fn parse_cell_value<F: RawField>(value: CellValue<F>) -> F {
+pub fn parse_cell_value<F: RawField + Group>(value: CellValue<F>) -> F {
     match value {
+        #[cfg(any(feature = "v030-halo2", feature = "latest-halo2"))]
         CellValue::Unassigned => F::ZERO,
+        #[cfg(not(any(feature = "v030-halo2", feature = "latest-halo2")))]
+        CellValue::Unassigned => F::zero(),
         CellValue::Assigned(f) => f,
         CellValue::Poison(v) => F::from(v as u64),
         // CellValue::Rational(n, _) => n,

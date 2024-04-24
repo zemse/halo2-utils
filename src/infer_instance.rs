@@ -1,5 +1,5 @@
-use halo2_proofs_latest::dev::MockProver;
-use halo2_proofs_latest::plonk::Any;
+use crate::halo2_proofs::dev::MockProver;
+use crate::halo2_proofs::plonk::Any;
 
 use crate::halo2_proofs::plonk::{Circuit, ConstraintSystem};
 
@@ -50,14 +50,20 @@ pub fn infer_instance<F: RawField, C: Circuit<F>>(circuit: &C, k: Option<u32>) -
             };
 
             let other_value = match other_column.column_type() {
+                #[cfg(any(feature = "v030-halo2", feature = "latest-halo2"))]
                 Any::Advice(_) => prover.advice()[other_column.index()][*other_row],
+                #[cfg(not(any(feature = "v030-halo2", feature = "latest-halo2")))]
+                Any::Advice => prover.advice()[other_column.index()][*other_row],
                 Any::Fixed => prover.fixed()[other_column.index()][*other_row],
                 Any::Instance => unreachable!(),
             };
 
             let col = &mut instance[instance_column.index()];
             while col.len() < *instance_row {
+                #[cfg(any(feature = "v030-halo2", feature = "latest-halo2"))]
                 col.push(F::ZERO);
+                #[cfg(not(any(feature = "v030-halo2", feature = "latest-halo2")))]
+                col.push(F::zero());
             }
 
             col.push(parse_cell_value(other_value))

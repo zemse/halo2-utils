@@ -69,6 +69,7 @@ impl<F: FieldExt> Circuit<F> for FactorisationCircuit<F> {
         let product_cell = layouter.assign_region(
             || "region main",
             |mut region| {
+                #[cfg(any(feature = "v030-halo2", feature = "latest-halo2"))]
                 region.name_column(|| "advice colm", config.advice);
                 // region.name_column(|| "my selector", config.selector);
 
